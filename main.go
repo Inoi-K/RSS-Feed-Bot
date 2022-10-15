@@ -5,58 +5,35 @@ import (
 	"context"
 	"flag"
 	"github.com/Inoi-K/RSS-Feed-Bot/configs/env"
+	"github.com/Inoi-K/RSS-Feed-Bot/configs/util"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
 	"os"
 	"strings"
-
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 var (
-	// Menu texts
-	firstMenu  = "<b>Menu 1</b>\n\nA beautiful menu with a shiny inline button."
-	secondMenu = "<b>Menu 2</b>\n\nA better menu with even more shiny inline buttons."
-
-	// Button texts
-	nextButton     = "Next"
-	backButton     = "Back"
-	tutorialButton = "Tutorial"
-
-	// Store bot screaming status
-	screaming = true
-	bot       *tgbotapi.BotAPI
-
-	// Keyboard layout for the first menu. One button, one row
-	firstMenuMarkup = tgbotapi.NewInlineKeyboardMarkup(
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData(nextButton, nextButton),
-		),
-	)
-
-	// Keyboard layout for the second menu. Two buttons, one per row
-	secondMenuMarkup = tgbotapi.NewInlineKeyboardMarkup(
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData(backButton, backButton),
-		),
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonURL(tutorialButton, "https://core.telegram.org/bots/api"),
-		),
-	)
+	cfg *util.Config
+	bot *tgbotapi.BotAPI
 )
 
 func main() {
 	flag.Parse()
 
+	// Create configuration
+	cfg = util.NewConfig()
+
 	var err error
+	// Connect to the bot
 	bot, err = tgbotapi.NewBotAPI(*env.Token)
 	if err != nil {
 		// Abort if something is wrong
 		log.Panic(err)
 	}
-
 	// Set this to true to log all interactions with telegram servers
 	bot.Debug = false
 
+	// Set update rate
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 
@@ -120,7 +97,7 @@ func handleMessage(message *tgbotapi.Message) {
 	var err error
 	if strings.HasPrefix(text, "/") {
 		err = handleCommand(message.Chat.ID, text)
-	} else if screaming && len(text) > 0 {
+	} else if cfg.Screaming && len(text) > 0 {
 		msg := tgbotapi.NewMessage(message.Chat.ID, strings.ToUpper(text))
 		// To preserve markdown, we attach entities (bold, italic..)
 		msg.Entities = message.Entities
@@ -142,15 +119,15 @@ func handleCommand(chatId int64, command string) error {
 
 	switch command {
 	case "/scream":
-		screaming = true
+		cfg.Screaming = true
 		break
 
 	case "/whisper":
-		screaming = false
+		cfg.Screaming = false
 		break
 
 	case "/menu":
-		err = sendMenu(chatId)
+		err = sendMenu(chatId, cfg.FirstMenu, cfg.FirstMenuMarkup)
 		break
 	}
 
@@ -163,27 +140,33 @@ func handleButton(query *tgbotapi.CallbackQuery) {
 	markup := tgbotapi.NewInlineKeyboardMarkup()
 	message := query.Message
 
-	if query.Data == nextButton {
-		text = secondMenu
-		markup = secondMenuMarkup
-	} else if query.Data == backButton {
-		text = firstMenu
-		markup = firstMenuMarkup
+	if query.Data == cfg.NextButton {
+		text = cfg.SecondMenu
+		markup = cfg.SecondMenuMarkup
+	} else if query.Data == cfg.BackButton {
+		text = cfg.FirstMenu
+		markup = cfg.FirstMenuMarkup
 	}
 
 	callbackCfg := tgbotapi.NewCallback(query.ID, "")
-	bot.Send(callbackCfg)
+	_, err := bot.Send(callbackCfg)
+	if err != nil {
+		log.Printf("callback config error: %v", err)
+	}
 
 	// Replace menu text and keyboard
 	msg := tgbotapi.NewEditMessageTextAndMarkup(message.Chat.ID, message.MessageID, text, markup)
 	msg.ParseMode = tgbotapi.ModeHTML
-	bot.Send(msg)
+	_, err = bot.Send(msg)
+	if err != nil {
+		log.Printf("menu text and keyboard error: %v", err)
+	}
 }
 
-func sendMenu(chatId int64) error {
-	msg := tgbotapi.NewMessage(chatId, firstMenu)
+func sendMenu(chatId int64, text string, markup tgbotapi.InlineKeyboardMarkup) error {
+	msg := tgbotapi.NewMessage(chatId, text)
 	msg.ParseMode = tgbotapi.ModeHTML
-	msg.ReplyMarkup = firstMenuMarkup
+	msg.ReplyMarkup = markup
 	_, err := bot.Send(msg)
 	return err
 }
