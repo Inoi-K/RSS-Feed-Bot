@@ -6,6 +6,7 @@ import (
 	"flag"
 	"github.com/Inoi-K/RSS-Feed-Bot/configs/env"
 	"github.com/Inoi-K/RSS-Feed-Bot/configs/util"
+	"github.com/Inoi-K/RSS-Feed-Bot/internal/command"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
 	"os"
@@ -13,8 +14,9 @@ import (
 )
 
 var (
-	cfg *util.Config
-	bot *tgbotapi.BotAPI
+	cfg      *util.Config
+	bot      *tgbotapi.BotAPI
+	commands map[string]command.ICommand
 )
 
 func main() {
@@ -32,6 +34,8 @@ func main() {
 	}
 	// Set this to true to log all interactions with telegram servers
 	bot.Debug = false
+
+	commands = makeCommands()
 
 	// Set update rate
 	u := tgbotapi.NewUpdate(0)
@@ -55,6 +59,14 @@ func main() {
 	cancel()
 }
 
+func makeCommands() map[string]command.ICommand {
+	return map[string]command.ICommand{
+		"/scream":  &command.Scream{},
+		"/whisper": &command.Whisper{},
+		"/menu":    &command.Menu{},
+	}
+}
+
 func receiveUpdates(ctx context.Context, updates tgbotapi.UpdatesChannel) {
 	// `for {` means the loop is infinite until we manually stop it
 	for {
@@ -73,17 +85,18 @@ func handleUpdate(update tgbotapi.Update) {
 	switch {
 	// Handle messages
 	case update.Message != nil:
-		handleMessage(update.Message)
+		handleMessage(update)
 		break
 
 	// Handle button clicks
 	case update.CallbackQuery != nil:
-		handleButton(update.CallbackQuery)
+		handleButton(update)
 		break
 	}
 }
 
-func handleMessage(message *tgbotapi.Message) {
+func handleMessage(update tgbotapi.Update) {
+	message := update.Message
 	user := message.From
 	text := message.Text
 
@@ -96,7 +109,7 @@ func handleMessage(message *tgbotapi.Message) {
 
 	var err error
 	if strings.HasPrefix(text, "/") {
-		err = handleCommand(message.Chat.ID, text)
+		err = handleCommand(update, text)
 	} else if cfg.Screaming && len(text) > 0 {
 		msg := tgbotapi.NewMessage(message.Chat.ID, strings.ToUpper(text))
 		// To preserve markdown, we attach entities (bold, italic..)
@@ -114,27 +127,13 @@ func handleMessage(message *tgbotapi.Message) {
 }
 
 // When we get a command, we react accordingly
-func handleCommand(chatId int64, command string) error {
-	var err error
-
-	switch command {
-	case "/scream":
-		cfg.Screaming = true
-		break
-
-	case "/whisper":
-		cfg.Screaming = false
-		break
-
-	case "/menu":
-		err = sendMenu(chatId, cfg.FirstMenu, cfg.FirstMenuMarkup)
-		break
-	}
-
-	return err
+func handleCommand(update tgbotapi.Update, curCommand string) error {
+	return commands[curCommand].Execute(bot, update, cfg)
 }
 
-func handleButton(query *tgbotapi.CallbackQuery) {
+func handleButton(update tgbotapi.Update) {
+	query := update.CallbackQuery
+
 	var text string
 
 	markup := tgbotapi.NewInlineKeyboardMarkup()
@@ -161,12 +160,4 @@ func handleButton(query *tgbotapi.CallbackQuery) {
 	if err != nil {
 		log.Printf("menu text and keyboard error: %v", err)
 	}
-}
-
-func sendMenu(chatId int64, text string, markup tgbotapi.InlineKeyboardMarkup) error {
-	msg := tgbotapi.NewMessage(chatId, text)
-	msg.ParseMode = tgbotapi.ModeHTML
-	msg.ReplyMarkup = markup
-	_, err := bot.Send(msg)
-	return err
 }
