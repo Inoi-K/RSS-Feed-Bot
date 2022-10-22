@@ -16,24 +16,24 @@ func receiveUpdates(ctx context.Context, updates tgbotapi.UpdatesChannel) {
 			return
 		// receive update from channel and then handle it
 		case update := <-updates:
-			handleUpdate(update)
+			handleUpdate(ctx, update)
 		}
 	}
 }
 
-func handleUpdate(update tgbotapi.Update) {
+func handleUpdate(ctx context.Context, update tgbotapi.Update) {
 	switch {
 	// Handle messages
 	case update.Message != nil:
-		handleMessage(update)
+		handleMessage(ctx, update)
 
 	// Handle button clicks
 	case update.CallbackQuery != nil:
-		handleButton(update)
+		handleButton(ctx, update)
 	}
 }
 
-func handleMessage(update tgbotapi.Update) {
+func handleMessage(ctx context.Context, update tgbotapi.Update) {
 	message := update.Message
 	user := message.From
 	text := message.Text
@@ -47,7 +47,7 @@ func handleMessage(update tgbotapi.Update) {
 
 	var err error
 	if strings.HasPrefix(text, "/") {
-		err = handleCommand(update, text)
+		err = handleCommand(ctx, update, text)
 	} else if cfg.Screaming && len(text) > 0 {
 		msg := tgbotapi.NewMessage(message.Chat.ID, strings.ToUpper(text))
 		// To preserve markdown, we attach entities (bold, italic..)
@@ -65,11 +65,11 @@ func handleMessage(update tgbotapi.Update) {
 }
 
 // When we get a command, we react accordingly
-func handleCommand(update tgbotapi.Update, curCommand string) error {
-	return commands[curCommand].Execute(bot, update, cfg)
+func handleCommand(ctx context.Context, update tgbotapi.Update, curCommand string) error {
+	return commands[curCommand].Execute(ctx, bot, update, cfg)
 }
 
-func handleButton(update tgbotapi.Update) {
+func handleButton(ctx context.Context, update tgbotapi.Update) {
 	query := update.CallbackQuery
 
 	var text string
