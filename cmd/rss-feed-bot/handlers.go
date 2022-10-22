@@ -47,7 +47,7 @@ func handleMessage(ctx context.Context, update tgbotapi.Update) {
 
 	var err error
 	if strings.HasPrefix(text, "/") {
-		err = handleCommand(ctx, update, text)
+		err = handleCommand(ctx, update)
 	} else if cfg.Screaming && len(text) > 0 {
 		msg := tgbotapi.NewMessage(message.Chat.ID, strings.ToUpper(text))
 		// To preserve markdown, we attach entities (bold, italic..)
@@ -65,7 +65,8 @@ func handleMessage(ctx context.Context, update tgbotapi.Update) {
 }
 
 // When we get a command, we react accordingly
-func handleCommand(ctx context.Context, update tgbotapi.Update, curCommand string) error {
+func handleCommand(ctx context.Context, update tgbotapi.Update) error {
+	curCommand := update.Message.Command()
 	return commands[curCommand].Execute(ctx, bot, update, cfg)
 }
 

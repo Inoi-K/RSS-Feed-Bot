@@ -65,9 +65,11 @@ func main() {
 
 func makeCommands() map[string]command.ICommand {
 	return map[string]command.ICommand{
-		"/scream":  &command.Scream{},
-		"/whisper": &command.Whisper{},
-		"/menu":    &command.Menu{},
-		"/start":   &command.Start{},
+		"scream":  &command.Scream{},
+		"whisper": &command.Whisper{},
+		"menu":    &command.Menu{},
+		"start":   &command.Start{},
+		"sub":     &command.Subscribe{},
+		"unsub":   &command.Unsubscribe{},
 	}
 }

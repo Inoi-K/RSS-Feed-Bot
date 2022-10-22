@@ -5,6 +5,7 @@ import (
 	"github.com/Inoi-K/RSS-Feed-Bot/configs/util"
 	"github.com/Inoi-K/RSS-Feed-Bot/pkg/database"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"strings"
 )
 
 type ICommand interface {
@@ -43,4 +44,32 @@ func (c *Start) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.
 	db := database.GetDB()
 
 	return db.AddUser(ctx, usr.ID, usr.LanguageCode)
+}
+
+type Subscribe struct{}
+
+func (c *Subscribe) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, cfg *util.Config) error {
+	usr := upd.SentFrom()
+
+	db := database.GetDB()
+
+	urls := strings.Split(upd.Message.CommandArguments(), " ")
+	for _, url := range urls {
+		err := db.AddSource(ctx, usr.ID, url)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+type Unsubscribe struct{}
+
+func (c *Unsubscribe) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, cfg *util.Config) error {
+	usr := upd.SentFrom()
+
+	db := database.GetDB()
+
+	return db.RemoveSource(ctx, usr.ID, usr.LanguageCode)
 }
