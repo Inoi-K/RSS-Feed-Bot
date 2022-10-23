@@ -56,6 +56,7 @@ func (db *Database) AddUser(ctx context.Context, userID int64, lang string) erro
 	return nil
 }
 
+// TODO insert multiple rows in one query
 func (db *Database) AddSource(ctx context.Context, userID int64, url string) error {
 	query := fmt.Sprintf("INSERT INTO schema1.sources (url) VALUES ('%v') RETURNING id;", url)
 	var sourceID int64
@@ -73,7 +74,41 @@ func (db *Database) AddSource(ctx context.Context, userID int64, url string) err
 	return nil
 }
 
-// TODO return inline buttons with user's sources
 func (db *Database) RemoveSource(ctx context.Context, userID int64, url string) error {
+	query := fmt.Sprintf("SELECT id FROM schema1.sources WHERE url = '%v' LIMIT 1;", url)
+	var sourceID int64
+	err := db.pool.QueryRow(ctx, query).Scan(&sourceID)
+	if err != nil {
+		return err
+	}
+
+	query = fmt.Sprintf("DELETE FROM schema1.userSource WHERE \"userId\" = %v AND \"sourceId\" = %v;", userID, sourceID)
+	_, err = db.pool.Query(ctx, query)
+	if err != nil {
+		return err
+	}
+
 	return nil
+}
+
+func (db *Database) GetUserSourcesTitleURL(ctx context.Context, userID int64) ([][]string, error) {
+	query := fmt.Sprintf("SELECT title, url FROM schema1.sources WHERE id IN (SELECT \"sourceId\" FROM schema1.userSource WHERE \"userId\" = %v);", userID)
+	rows, err := db.pool.Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	// TODO refactor []string{title, url} to a struct
+	var sourceTitleURL [][]string
+	for rows.Next() {
+		var sourceTitle, sourceURL string
+		err = rows.Scan(&sourceTitle, &sourceURL)
+		if err != nil {
+			return nil, err
+		}
+		sourceTitleURL = append(sourceTitleURL, []string{sourceTitle, sourceURL})
+	}
+
+	return sourceTitleURL, nil
 }

@@ -2,6 +2,7 @@ package command
 
 import (
 	"context"
+	"fmt"
 	"github.com/Inoi-K/RSS-Feed-Bot/configs/util"
 	"github.com/Inoi-K/RSS-Feed-Bot/pkg/database"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -71,5 +72,41 @@ func (c *Unsubscribe) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgb
 
 	db := database.GetDB()
 
-	return db.RemoveSource(ctx, usr.ID, usr.LanguageCode)
+	args := upd.Message.CommandArguments()
+	// Remove urls if args are specified
+	// Otherwise display inline buttons with sources
+	if len(args) > 0 {
+		urls := strings.Split(args, " ")
+		for _, url := range urls {
+			err := db.RemoveSource(ctx, usr.ID, url)
+			if err != nil {
+				return err
+			}
+		}
+	} else {
+		// TODO return inline buttons with user's sources
+		msg := tgbotapi.NewMessage(upd.Message.Chat.ID, "**Please choose a subscription you'd like to unsubscribe from:**\n*test*")
+		msg.ParseMode = tgbotapi.ModeMarkdownV2
+
+		sourcesTitleURL, err := db.GetUserSourcesTitleURL(ctx, usr.ID)
+		if err != nil {
+			return err
+		}
+
+		var buttons [][]tgbotapi.InlineKeyboardButton
+		for _, sourceTitleURL := range sourcesTitleURL {
+			row := tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData(sourceTitleURL[0], fmt.Sprintf("%v %v", cfg.UnsubscribeCallbackData, sourceTitleURL[1])),
+			)
+			buttons = append(buttons, row)
+		}
+		msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(buttons...)
+
+		_, err = bot.Send(msg)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
