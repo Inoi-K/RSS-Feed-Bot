@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"github.com/Inoi-K/RSS-Feed-Bot/configs/consts"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
 	"strings"
@@ -47,13 +47,8 @@ func handleMessage(ctx context.Context, update tgbotapi.Update) {
 	log.Printf("%s wrote %s", user.FirstName, text)
 
 	var err error
-	if strings.HasPrefix(text, "/") {
+	if message.IsCommand() {
 		err = handleCommand(ctx, update)
-	} else if cfg.Screaming && len(text) > 0 {
-		msg := tgbotapi.NewMessage(message.Chat.ID, strings.ToUpper(text))
-		// To preserve markdown, we attach entities (bold, italic..)
-		msg.Entities = message.Entities
-		_, err = bot.Send(msg)
 	} else {
 		// This is equivalent to forwarding, without the sender's name
 		copyMsg := tgbotapi.NewCopyMessage(message.Chat.ID, message.Chat.ID, message.MessageID)
@@ -68,59 +63,22 @@ func handleMessage(ctx context.Context, update tgbotapi.Update) {
 // When we get a command, we react accordingly
 func handleCommand(ctx context.Context, update tgbotapi.Update) error {
 	curCommand := update.Message.Command()
-	return commands[curCommand].Execute(ctx, bot, update, cfg)
+	return commands[curCommand].Execute(ctx, bot, update, update.Message.CommandArguments())
 }
 
 func handleButton(ctx context.Context, update tgbotapi.Update) {
 	query := update.CallbackQuery
+	command, args, _ := strings.Cut(query.Data, consts.ArgumentsSeparator)
 
-	var text string
-
-	markup := tgbotapi.NewInlineKeyboardMarkup()
-	message := query.Message
-
-	switch query.Data {
-	case cfg.NextButton:
-		text = cfg.SecondMenu
-		markup = cfg.SecondMenuMarkup
-	case cfg.BackButton:
-		text = cfg.FirstMenu
-		markup = cfg.FirstMenuMarkup
-	default:
-		complexQuery := strings.Split(query.Data, " ")
-		// TODO very very spaghetti :(
-		switch complexQuery[0] {
-		case cfg.UnsubscribeCallbackData:
-			err := db.RemoveSource(ctx, update.SentFrom().ID, complexQuery[1])
-			if err != nil {
-				log.Printf("couldn't process callback complex query: %v", err)
-			}
-			// TODO also add source url here
-			text = fmt.Sprintf("Unsubscribed successfully\n%v", "")
-		}
+	err := commands[command].Execute(ctx, bot, update, args)
+	if err != nil {
+		log.Printf("couldn't process button callback: %v", err)
 	}
 
 	// TODO resolve 'callback config error: json: cannot unmarshal bool into Go value of type tgbotapi.Message' error
 	callbackCfg := tgbotapi.NewCallback(query.ID, "")
-	_, err := bot.Send(callbackCfg)
+	_, err = bot.Send(callbackCfg)
 	if err != nil {
 		log.Printf("callback config error: %v", err)
-	}
-
-	if markup.InlineKeyboard != nil {
-		// Replace menu text and keyboard
-		msg := tgbotapi.NewEditMessageTextAndMarkup(message.Chat.ID, message.MessageID, text, markup)
-		msg.ParseMode = tgbotapi.ModeHTML
-		_, err = bot.Send(msg)
-		if err != nil {
-			log.Printf("menu text and keyboard error: %v", err)
-		}
-	}
-
-	msg := tgbotapi.NewMessage(message.Chat.ID, text)
-	msg.ParseMode = tgbotapi.ModeMarkdownV2
-	_, err = bot.Send(msg)
-	if err != nil {
-		log.Printf("reply error: %v", err)
 	}
 }

@@ -4,8 +4,8 @@ import (
 	"bufio"
 	"context"
 	"flag"
+	"github.com/Inoi-K/RSS-Feed-Bot/configs/consts"
 	"github.com/Inoi-K/RSS-Feed-Bot/configs/env"
-	"github.com/Inoi-K/RSS-Feed-Bot/configs/util"
 	"github.com/Inoi-K/RSS-Feed-Bot/internal/command"
 	"github.com/Inoi-K/RSS-Feed-Bot/pkg/database"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -14,7 +14,6 @@ import (
 )
 
 var (
-	cfg      *util.Config
 	bot      *tgbotapi.BotAPI
 	db       *database.Database
 	commands map[string]command.ICommand
@@ -22,9 +21,6 @@ var (
 
 func main() {
 	flag.Parse()
-
-	// Create configuration
-	cfg = util.NewConfig()
 
 	var err error
 	// Connect to the bot
@@ -65,11 +61,11 @@ func main() {
 
 func makeCommands() map[string]command.ICommand {
 	return map[string]command.ICommand{
-		"scream":  &command.Scream{},
-		"whisper": &command.Whisper{},
-		"menu":    &command.Menu{},
-		"start":   &command.Start{},
-		"sub":     &command.Subscribe{},
-		"unsub":   &command.Unsubscribe{},
+		"menu":                   &command.Menu{},
+		"start":                  &command.Start{},
+		"sub":                    &command.Subscribe{},
+		"unsub":                  &command.Unsubscribe{},
+		consts.UnsubscribeButton: &command.UnsubscribeButton{},
+		consts.NavigationButton:  &command.NavigationButton{},
 	}
 }
