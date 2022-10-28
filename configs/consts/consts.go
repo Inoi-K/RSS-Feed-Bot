@@ -19,6 +19,9 @@ const (
 	BackText = "Back"
 
 	ArgumentsSeparator = " "
+
+	// Errors
+	UniqueConstraintCode = "23505"
 )
 
 var (

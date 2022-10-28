@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Inoi-K/RSS-Feed-Bot/configs/consts"
 	"github.com/Inoi-K/RSS-Feed-Bot/configs/env"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -62,7 +64,18 @@ func (db *Database) AddSource(ctx context.Context, userID int64, url string) err
 	var sourceID int64
 	err := db.pool.QueryRow(ctx, query).Scan(&sourceID)
 	if err != nil {
-		return err
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			if pgErr.Code == consts.UniqueConstraintCode {
+				query = fmt.Sprintf("SELECT id FROM schema1.sources WHERE url = '%v' LIMIT 1;", url)
+				err := db.pool.QueryRow(ctx, query).Scan(&sourceID)
+				if err != nil {
+					return err
+				}
+			}
+		} else {
+			return err
+		}
 	}
 
 	query = fmt.Sprintf("INSERT INTO schema1.userSource VALUES (%v, %v, true);", userID, sourceID)
