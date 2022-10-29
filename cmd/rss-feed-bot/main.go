@@ -4,45 +4,46 @@ import (
 	"bufio"
 	"context"
 	"flag"
-	"github.com/Inoi-K/RSS-Feed-Bot/configs/env"
-	"github.com/Inoi-K/RSS-Feed-Bot/configs/util"
+	"github.com/Inoi-K/RSS-Feed-Bot/configs/consts"
+	"github.com/Inoi-K/RSS-Feed-Bot/configs/flags"
 	"github.com/Inoi-K/RSS-Feed-Bot/internal/command"
+	"github.com/Inoi-K/RSS-Feed-Bot/pkg/database"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
 	"os"
 )
 
 var (
-	cfg      *util.Config
 	bot      *tgbotapi.BotAPI
+	db       *database.Database
 	commands map[string]command.ICommand
 )
 
 func main() {
 	flag.Parse()
 
-	// Create configuration
-	cfg = util.NewConfig()
-
 	var err error
 	// Connect to the bot
-	bot, err = tgbotapi.NewBotAPI(*env.Token)
+	bot, err = tgbotapi.NewBotAPI(*flags.Token)
 	if err != nil {
 		// Abort if something is wrong
 		log.Panic(err)
 	}
 	// Set this to true to log all interactions with telegram servers
-	bot.Debug = false
+	bot.Debug = true
+
+	// Create a new cancellable background context. Calling `cancel()` leads to the cancellation of the context
+	ctx := context.Background()
+	ctx, cancel := context.WithCancel(ctx)
+
+	// Create a new database connection
+	db, err = database.ConnectDB(ctx)
 
 	commands = makeCommands()
 
 	// Set update rate
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
-
-	// Create a new cancellable background context. Calling `cancel()` leads to the cancellation of the context
-	ctx := context.Background()
-	ctx, cancel := context.WithCancel(ctx)
 
 	// `updates` is a golang channel which receives telegram updates
 	updates := bot.GetUpdatesChan(u)
@@ -60,8 +61,11 @@ func main() {
 
 func makeCommands() map[string]command.ICommand {
 	return map[string]command.ICommand{
-		"/scream":  &command.Scream{},
-		"/whisper": &command.Whisper{},
-		"/menu":    &command.Menu{},
+		consts.MenuCommand:        &command.Menu{},
+		consts.StartCommand:       &command.Start{},
+		consts.SubscribeCommand:   &command.Subscribe{},
+		consts.UnsubscribeCommand: &command.Unsubscribe{},
+		consts.UnsubscribeButton:  &command.UnsubscribeButton{},
+		consts.NavigationButton:   &command.NavigationButton{},
 	}
 }
