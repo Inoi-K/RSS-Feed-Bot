@@ -8,20 +8,20 @@ import (
 	"strings"
 )
 
+// receiveUpdates handles updates and context cancel
 func receiveUpdates(ctx context.Context, updates tgbotapi.UpdatesChannel) {
-	// `for {` means the loop is infinite until we manually stop it
 	for {
 		select {
 		// stop looping if ctx is cancelled
 		case <-ctx.Done():
 			return
-		// receive update from channel and then handle it
 		case update := <-updates:
 			handleUpdate(ctx, update)
 		}
 	}
 }
 
+// handleUpdate distributes incoming update
 func handleUpdate(ctx context.Context, update tgbotapi.Update) {
 	switch {
 	// Handle messages
@@ -34,6 +34,7 @@ func handleUpdate(ctx context.Context, update tgbotapi.Update) {
 	}
 }
 
+// handleMessage defines the type of the message (command or other - replies as echo in the latter case)
 func handleMessage(ctx context.Context, update tgbotapi.Update) {
 	message := update.Message
 	user := message.From
@@ -60,12 +61,13 @@ func handleMessage(ctx context.Context, update tgbotapi.Update) {
 	}
 }
 
-// When we get a command, we react accordingly
+// handleCommand handles commands specifically
 func handleCommand(ctx context.Context, update tgbotapi.Update) error {
 	curCommand := update.Message.Command()
 	return commands[curCommand].Execute(ctx, bot, update, update.Message.CommandArguments())
 }
 
+// handleButton handles buttons callback specifically
 func handleButton(ctx context.Context, update tgbotapi.Update) {
 	query := update.CallbackQuery
 	command, args, _ := strings.Cut(query.Data, consts.ArgumentsSeparator)
@@ -75,9 +77,9 @@ func handleButton(ctx context.Context, update tgbotapi.Update) {
 		log.Printf("couldn't process button callback: %v", err)
 	}
 
-	// TODO resolve 'callback config error: json: cannot unmarshal bool into Go value of type tgbotapi.Message' error
+	// close the query
 	callbackCfg := tgbotapi.NewCallback(query.ID, "")
-	_, err = bot.Send(callbackCfg)
+	_, err = bot.Request(callbackCfg)
 	if err != nil {
 		log.Printf("callback config error: %v", err)
 	}

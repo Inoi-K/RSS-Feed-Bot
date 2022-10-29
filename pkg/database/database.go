@@ -5,19 +5,21 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Inoi-K/RSS-Feed-Bot/configs/consts"
-	"github.com/Inoi-K/RSS-Feed-Bot/configs/env"
+	"github.com/Inoi-K/RSS-Feed-Bot/configs/flags"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 var db *Database
 
+// Database provides ways for interaction with database (currently pool (proxy) only)
 type Database struct {
 	pool *pgxpool.Pool
 }
 
+// ConnectDB creates and returns connection to database
 func ConnectDB(ctx context.Context) (*Database, error) {
-	dbpool, err := pgxpool.New(ctx, *env.DatabaseUrl)
+	dbpool, err := pgxpool.New(ctx, *flags.DatabaseUrl)
 	if err != nil {
 		return nil, err
 	}
@@ -30,10 +32,12 @@ func ConnectDB(ctx context.Context) (*Database, error) {
 	return db, nil
 }
 
+// GetDB returns database
 func GetDB() *Database {
 	return db
 }
 
+// AddUser creates a record of user in database
 func (db *Database) AddUser(ctx context.Context, userID int64, lang string) error {
 	if len(lang) > 2 {
 		return errors.New("language cannot be longer than 2 symbols")
@@ -59,6 +63,8 @@ func (db *Database) AddUser(ctx context.Context, userID int64, lang string) erro
 }
 
 // TODO insert multiple rows in one query
+
+// AddSource adds one source in database and associates it with the user
 func (db *Database) AddSource(ctx context.Context, userID int64, url string) error {
 	query := fmt.Sprintf("INSERT INTO schema1.sources (url) VALUES ('%v') RETURNING id;", url)
 	var sourceID int64
@@ -66,7 +72,7 @@ func (db *Database) AddSource(ctx context.Context, userID int64, url string) err
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) {
-			if pgErr.Code == consts.UniqueConstraintCode {
+			if pgErr.Code == consts.DuplicationCode {
 				query = fmt.Sprintf("SELECT id FROM schema1.sources WHERE url = '%v' LIMIT 1;", url)
 				err := db.pool.QueryRow(ctx, query).Scan(&sourceID)
 				if err != nil {
@@ -87,6 +93,7 @@ func (db *Database) AddSource(ctx context.Context, userID int64, url string) err
 	return nil
 }
 
+// RemoveSource removes source user-source connection
 func (db *Database) RemoveSource(ctx context.Context, userID int64, url string) error {
 	query := fmt.Sprintf("SELECT id FROM schema1.sources WHERE url = '%v' LIMIT 1;", url)
 	var sourceID int64
@@ -104,6 +111,7 @@ func (db *Database) RemoveSource(ctx context.Context, userID int64, url string) 
 	return nil
 }
 
+// GetUserSourcesTitleURL gets title and url of the all sources associated with the user
 func (db *Database) GetUserSourcesTitleURL(ctx context.Context, userID int64) ([][]string, error) {
 	query := fmt.Sprintf("SELECT title, url FROM schema1.sources WHERE id IN (SELECT \"sourceId\" FROM schema1.userSource WHERE \"userId\" = %v);", userID)
 	rows, err := db.pool.Query(ctx, query)

@@ -11,17 +11,23 @@ const (
 	FirstMenu  = "*Menu 1*\n\nA beautiful menu with a shiny inline button"
 	SecondMenu = "*Menu 2*\n\nA better menu with even more shiny inline buttons"
 
-	NavigationButton  = "Navigation"
-	TutorialButton    = "Tutorial"
-	UnsubscribeButton = "Unsubscribe"
+	MenuCommand        = "menu"
+	StartCommand       = "start"
+	SubscribeCommand   = "sub"
+	UnsubscribeCommand = "unsub"
+	NavigationButton   = "navigation"
+	TutorialButton     = "tutorial"
+	UnsubscribeButton  = "unsubscribe"
 
 	NextText = "Next"
 	BackText = "Back"
 
 	ArgumentsSeparator = " "
 
-	// Errors
-	UniqueConstraintCode = "23505"
+	// ERRORS
+
+	// DuplicationCode aka UniqueConstraintCode
+	DuplicationCode = "23505"
 )
 
 var (

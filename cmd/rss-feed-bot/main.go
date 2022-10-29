@@ -5,7 +5,7 @@ import (
 	"context"
 	"flag"
 	"github.com/Inoi-K/RSS-Feed-Bot/configs/consts"
-	"github.com/Inoi-K/RSS-Feed-Bot/configs/env"
+	"github.com/Inoi-K/RSS-Feed-Bot/configs/flags"
 	"github.com/Inoi-K/RSS-Feed-Bot/internal/command"
 	"github.com/Inoi-K/RSS-Feed-Bot/pkg/database"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -24,7 +24,7 @@ func main() {
 
 	var err error
 	// Connect to the bot
-	bot, err = tgbotapi.NewBotAPI(*env.Token)
+	bot, err = tgbotapi.NewBotAPI(*flags.Token)
 	if err != nil {
 		// Abort if something is wrong
 		log.Panic(err)
@@ -61,11 +61,11 @@ func main() {
 
 func makeCommands() map[string]command.ICommand {
 	return map[string]command.ICommand{
-		"menu":                   &command.Menu{},
-		"start":                  &command.Start{},
-		"sub":                    &command.Subscribe{},
-		"unsub":                  &command.Unsubscribe{},
-		consts.UnsubscribeButton: &command.UnsubscribeButton{},
-		consts.NavigationButton:  &command.NavigationButton{},
+		consts.MenuCommand:        &command.Menu{},
+		consts.StartCommand:       &command.Start{},
+		consts.SubscribeCommand:   &command.Subscribe{},
+		consts.UnsubscribeCommand: &command.Unsubscribe{},
+		consts.UnsubscribeButton:  &command.UnsubscribeButton{},
+		consts.NavigationButton:   &command.NavigationButton{},
 	}
 }
