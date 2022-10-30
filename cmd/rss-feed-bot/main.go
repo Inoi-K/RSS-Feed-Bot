@@ -7,7 +7,7 @@ import (
 	"github.com/Inoi-K/RSS-Feed-Bot/configs/consts"
 	"github.com/Inoi-K/RSS-Feed-Bot/configs/flags"
 	"github.com/Inoi-K/RSS-Feed-Bot/internal/command"
-	"github.com/Inoi-K/RSS-Feed-Bot/pkg/database"
+	"github.com/Inoi-K/RSS-Feed-Bot/internal/database"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
 	"os"
@@ -67,5 +67,7 @@ func makeCommands() map[string]command.ICommand {
 		consts.UnsubscribeCommand: &command.Unsubscribe{},
 		consts.UnsubscribeButton:  &command.UnsubscribeButton{},
 		consts.NavigationButton:   &command.NavigationButton{},
+		"tick":                    &command.Ticker{},
+		"stop":                    &command.StopTicker{},
 	}
 }

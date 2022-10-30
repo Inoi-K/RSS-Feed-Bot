@@ -11,6 +11,8 @@ const (
 	FirstMenu  = "*Menu 1*\n\nA beautiful menu with a shiny inline button"
 	SecondMenu = "*Menu 2*\n\nA better menu with even more shiny inline buttons"
 
+	//region COMMANDS
+
 	MenuCommand        = "menu"
 	StartCommand       = "start"
 	SubscribeCommand   = "sub"
@@ -19,15 +21,25 @@ const (
 	TutorialButton     = "tutorial"
 	UnsubscribeButton  = "unsubscribe"
 
+	//endregion
+
 	NextText = "Next"
 	BackText = "Back"
 
 	ArgumentsSeparator = " "
 
-	// ERRORS
+	// region ERRORS
 
 	// DuplicationCode aka UniqueConstraintCode
 	DuplicationCode = "23505"
+
+	//endregion
+
+	//region INTERVALS
+
+	FeedUpdateIntervalSeconds = 5
+
+	//endregion
 )
 
 var (

@@ -3,7 +3,8 @@ package command
 import (
 	"context"
 	"github.com/Inoi-K/RSS-Feed-Bot/configs/consts"
-	"github.com/Inoi-K/RSS-Feed-Bot/pkg/database"
+	"github.com/Inoi-K/RSS-Feed-Bot/internal/database"
+	"github.com/Inoi-K/RSS-Feed-Bot/internal/feed"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"strings"
 )
@@ -148,3 +149,19 @@ func (c *NavigationButton) Execute(ctx context.Context, bot *tgbotapi.BotAPI, up
 }
 
 //endregion
+
+type Ticker struct{}
+
+func (c *Ticker) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
+	feed.Begin(ctx, bot, upd.Message.Chat.ID)
+
+	return nil
+}
+
+type StopTicker struct{}
+
+func (c *StopTicker) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
+	feed.End()
+
+	return nil
+}
