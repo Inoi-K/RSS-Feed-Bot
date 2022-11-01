@@ -37,23 +37,23 @@ func GetDB() *Database {
 	return db
 }
 
-// AddUser creates a record of user in database
-func (db *Database) AddUser(ctx context.Context, userID int64, lang string) error {
+// AddChat creates a record of chat in database
+func (db *Database) AddChat(ctx context.Context, chatID int64, lang string) error {
 	if len(lang) > 2 {
 		return errors.New("language cannot be longer than 2 symbols")
 	}
 
-	//query := fmt.Sprintf("SELECT EXISTS(SELECT 0 FROM schema1.users WHERE id = %v LIMIT 1);", userID)
+	//query := fmt.Sprintf("SELECT EXISTS(SELECT 0 FROM schema1.chats WHERE id = %v LIMIT 1);", chatID)
 	//var exists bool
 	//err := db.pool.QueryRow(ctx, query).Scan(&exists)
 	//if err != nil {
 	//	return nil
 	//}
 	//if exists {
-	//	return errors.New(fmt.Sprintf("user with id %v already exists", userID))
+	//	return errors.New(fmt.Sprintf("chat with id %v already exists", chatID))
 	//}
 
-	query := fmt.Sprintf("INSERT INTO schema1.users VALUES (%v, 'ru');", userID)
+	query := fmt.Sprintf("INSERT INTO schema1.chats VALUES (%v, 'ru');", chatID)
 	_, err := db.pool.Query(ctx, query)
 	if err != nil {
 		return err
@@ -64,8 +64,8 @@ func (db *Database) AddUser(ctx context.Context, userID int64, lang string) erro
 
 // TODO insert multiple rows in one query
 
-// AddSource adds one source in database and associates it with the user
-func (db *Database) AddSource(ctx context.Context, userID int64, url string) error {
+// AddSource adds one source in database and associates it with the chat
+func (db *Database) AddSource(ctx context.Context, chatID int64, url string) error {
 	query := fmt.Sprintf("INSERT INTO schema1.sources (url) VALUES ('%v') RETURNING id;", url)
 	var sourceID int64
 	err := db.pool.QueryRow(ctx, query).Scan(&sourceID)
@@ -84,7 +84,7 @@ func (db *Database) AddSource(ctx context.Context, userID int64, url string) err
 		}
 	}
 
-	query = fmt.Sprintf("INSERT INTO schema1.userSource VALUES (%v, %v, true);", userID, sourceID)
+	query = fmt.Sprintf("INSERT INTO schema1.chatsource VALUES (%v, %v, true);", chatID, sourceID)
 	_, err = db.pool.Query(ctx, query)
 	if err != nil {
 		return err
@@ -93,8 +93,8 @@ func (db *Database) AddSource(ctx context.Context, userID int64, url string) err
 	return nil
 }
 
-// RemoveSource removes source user-source connection
-func (db *Database) RemoveSource(ctx context.Context, userID int64, url string) error {
+// RemoveSource removes source chat-source connection
+func (db *Database) RemoveSource(ctx context.Context, chatID int64, url string) error {
 	query := fmt.Sprintf("SELECT id FROM schema1.sources WHERE url = '%v' LIMIT 1;", url)
 	var sourceID int64
 	err := db.pool.QueryRow(ctx, query).Scan(&sourceID)
@@ -102,7 +102,7 @@ func (db *Database) RemoveSource(ctx context.Context, userID int64, url string) 
 		return err
 	}
 
-	query = fmt.Sprintf("DELETE FROM schema1.userSource WHERE \"userId\" = %v AND \"sourceId\" = %v;", userID, sourceID)
+	query = fmt.Sprintf("DELETE FROM schema1.chatsource WHERE \"chatID\" = %v AND \"sourceID\" = %v;", chatID, sourceID)
 	_, err = db.pool.Query(ctx, query)
 	if err != nil {
 		return err
@@ -111,9 +111,9 @@ func (db *Database) RemoveSource(ctx context.Context, userID int64, url string) 
 	return nil
 }
 
-// GetUserSourcesTitleURL gets title and url of the all sources associated with the user
-func (db *Database) GetUserSourcesTitleURL(ctx context.Context, userID int64) ([][]string, error) {
-	query := fmt.Sprintf("SELECT title, url FROM schema1.sources WHERE id IN (SELECT \"sourceId\" FROM schema1.userSource WHERE \"userId\" = %v);", userID)
+// GetChatSourcesTitleURL gets title and url of the all sources associated with the chat
+func (db *Database) GetChatSourcesTitleURL(ctx context.Context, chatID int64) ([][]string, error) {
+	query := fmt.Sprintf("SELECT title, url FROM schema1.sources WHERE id IN (SELECT \"sourceID\" FROM schema1.chatsource WHERE \"chatID\" = %v);", chatID)
 	rows, err := db.pool.Query(ctx, query)
 	if err != nil {
 		return nil, err
