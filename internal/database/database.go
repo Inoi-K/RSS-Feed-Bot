@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/Inoi-K/RSS-Feed-Bot/configs/consts"
 	"github.com/Inoi-K/RSS-Feed-Bot/configs/flags"
+	"github.com/Inoi-K/RSS-Feed-Bot/internal/structs"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -43,7 +44,7 @@ func (db *Database) AddChat(ctx context.Context, chatID int64, lang string) erro
 		return errors.New("language cannot be longer than 2 symbols")
 	}
 
-	//query := fmt.Sprintf("SELECT EXISTS(SELECT 0 FROM schema1.chats WHERE id = %v LIMIT 1);", chatID)
+	//query := fmt.Sprintf("SELECT EXISTS(SELECT 0 FROM schema1.chat WHERE id = %v LIMIT 1);", chatID)
 	//var exists bool
 	//err := db.pool.QueryRow(ctx, query).Scan(&exists)
 	//if err != nil {
@@ -53,7 +54,7 @@ func (db *Database) AddChat(ctx context.Context, chatID int64, lang string) erro
 	//	return errors.New(fmt.Sprintf("chat with id %v already exists", chatID))
 	//}
 
-	query := fmt.Sprintf("INSERT INTO schema1.chats VALUES (%v, 'ru');", chatID)
+	query := fmt.Sprintf("INSERT INTO schema1.chat VALUES (%v, 'ru');", chatID)
 	_, err := db.pool.Query(ctx, query)
 	if err != nil {
 		return err
@@ -66,14 +67,14 @@ func (db *Database) AddChat(ctx context.Context, chatID int64, lang string) erro
 
 // AddSource adds one source in database and associates it with the chat
 func (db *Database) AddSource(ctx context.Context, chatID int64, url string) error {
-	query := fmt.Sprintf("INSERT INTO schema1.sources (url) VALUES ('%v') RETURNING id;", url)
+	query := fmt.Sprintf("INSERT INTO schema1.source (url) VALUES ('%v') RETURNING id;", url)
 	var sourceID int64
 	err := db.pool.QueryRow(ctx, query).Scan(&sourceID)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) {
 			if pgErr.Code == consts.DuplicationCode {
-				query = fmt.Sprintf("SELECT id FROM schema1.sources WHERE url = '%v' LIMIT 1;", url)
+				query = fmt.Sprintf("SELECT id FROM schema1.source WHERE url = '%v' LIMIT 1;", url)
 				err := db.pool.QueryRow(ctx, query).Scan(&sourceID)
 				if err != nil {
 					return err
@@ -95,7 +96,7 @@ func (db *Database) AddSource(ctx context.Context, chatID int64, url string) err
 
 // RemoveSource removes source chat-source connection
 func (db *Database) RemoveSource(ctx context.Context, chatID int64, url string) error {
-	query := fmt.Sprintf("SELECT id FROM schema1.sources WHERE url = '%v' LIMIT 1;", url)
+	query := fmt.Sprintf("SELECT id FROM schema1.source WHERE url = '%v' LIMIT 1;", url)
 	var sourceID int64
 	err := db.pool.QueryRow(ctx, query).Scan(&sourceID)
 	if err != nil {
@@ -113,7 +114,7 @@ func (db *Database) RemoveSource(ctx context.Context, chatID int64, url string) 
 
 // GetChatSourcesTitleURL gets title and url of the all sources associated with the chat
 func (db *Database) GetChatSourcesTitleURL(ctx context.Context, chatID int64) ([][]string, error) {
-	query := fmt.Sprintf("SELECT title, url FROM schema1.sources WHERE id IN (SELECT \"sourceID\" FROM schema1.chatsource WHERE \"chatID\" = %v);", chatID)
+	query := fmt.Sprintf("SELECT title, url FROM schema1.source WHERE id IN (SELECT \"sourceID\" FROM schema1.chatsource WHERE \"chatID\" = %v);", chatID)
 	rows, err := db.pool.Query(ctx, query)
 	if err != nil {
 		return nil, err
@@ -132,4 +133,25 @@ func (db *Database) GetChatSourcesTitleURL(ctx context.Context, chatID int64) ([
 	}
 
 	return sourceTitleURL, nil
+}
+
+func (db *Database) GetNewPosts(ctx context.Context, lastPostID int64) ([]structs.Post, error) {
+	query := fmt.Sprintf("SELECT * FROM schema1.post WHERE id > %v;", lastPostID)
+	rows, err := db.pool.Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var posts []structs.Post
+	for rows.Next() {
+		var post structs.Post
+		err = rows.Scan(&post.ID, &post.SourceID, &post.Title, &post.URL, &post.ChatID)
+		if err != nil {
+			return nil, err
+		}
+		posts = append(posts, post)
+	}
+
+	return posts, nil
 }

@@ -154,7 +154,7 @@ func (c *NavigationButton) Execute(ctx context.Context, bot *tgbotapi.BotAPI, up
 type Ticker struct{}
 
 func (c *Ticker) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
-	feed.Begin(ctx, bot, upd.Message.Chat.ID)
+	feed.Begin(ctx, bot)
 
 	return nil
 }

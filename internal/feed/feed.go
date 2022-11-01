@@ -2,23 +2,29 @@ package feed
 
 import (
 	"context"
+	"fmt"
 	"github.com/Inoi-K/RSS-Feed-Bot/configs/consts"
+	"github.com/Inoi-K/RSS-Feed-Bot/internal/database"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
 	"time"
 )
 
-var cancel func()
-var canceled chan struct{}
+var (
+	cancel   func()
+	canceled chan struct{}
 
-func Begin(ctx context.Context, bot *tgbotapi.BotAPI, chatID int64) {
+	lastPostID int64
+)
+
+func Begin(ctx context.Context, bot *tgbotapi.BotAPI) {
 	ticker := time.NewTicker(consts.FeedUpdateIntervalSeconds * time.Second)
 
 	go func() {
 		for {
 			select {
 			case <-ticker.C:
-				tick(bot, chatID)
+				ProcessNewPosts(ctx, bot)
 			case <-canceled:
 				ticker.Stop()
 				return
@@ -40,6 +46,12 @@ func Begin(ctx context.Context, bot *tgbotapi.BotAPI, chatID int64) {
 	}
 }
 
+func End() {
+	if cancel != nil {
+		cancel()
+	}
+}
+
 func tick(bot *tgbotapi.BotAPI, chatID int64) {
 	msg := tgbotapi.NewMessage(chatID, "tick")
 	_, err := bot.Send(msg)
@@ -48,8 +60,25 @@ func tick(bot *tgbotapi.BotAPI, chatID int64) {
 	}
 }
 
-func End() {
-	if cancel != nil {
-		cancel()
+// TODO implement new posts on chans & goroutines usage
+func ProcessNewPosts(ctx context.Context, bot *tgbotapi.BotAPI) {
+	db := database.GetDB()
+
+	posts, err := db.GetNewPosts(ctx, lastPostID)
+	if err != nil {
+		log.Printf("couldn't get new posts: %v", err)
+	}
+
+	for _, post := range posts {
+		text := fmt.Sprintf("%v\n\n%v", post.Title, post.URL)
+		msg := tgbotapi.NewMessage(post.ChatID, text)
+		_, err := bot.Send(msg)
+		if err != nil {
+			log.Printf("couldn't send post in %v chat: %v", post.ChatID, err)
+		}
+	}
+
+	if len(posts) > 1 {
+		lastPostID = posts[len(posts)-1].ID
 	}
 }
