@@ -69,5 +69,6 @@ func makeCommands() map[string]command.ICommand {
 		consts.NavigationButton:   &command.NavigationButton{},
 		"tick":                    &command.Ticker{},
 		"stop":                    &command.StopTicker{},
+		consts.UpdateCommand:      &command.Update{},
 	}
 }

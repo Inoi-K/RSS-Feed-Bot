@@ -1,6 +1,7 @@
 package consts
 
 import (
+	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"strings"
 )
@@ -17,9 +18,11 @@ const (
 	StartCommand       = "start"
 	SubscribeCommand   = "sub"
 	UnsubscribeCommand = "unsub"
-	NavigationButton   = "navigation"
-	TutorialButton     = "tutorial"
-	UnsubscribeButton  = "unsubscribe"
+	UpdateCommand      = "upd"
+
+	NavigationButton  = "navigation"
+	TutorialButton    = "tutorial"
+	UnsubscribeButton = "unsubscribe"
 
 	//endregion
 
@@ -54,6 +57,11 @@ var (
 		),
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonURL(TutorialButton, "https://core.telegram.org/bots/api"),
+		),
+	)
+	UpdateKeyboard = tgbotapi.NewReplyKeyboard(
+		tgbotapi.NewKeyboardButtonRow(
+			tgbotapi.NewKeyboardButton(fmt.Sprintf("/%v", UpdateCommand)),
 		),
 	)
 )

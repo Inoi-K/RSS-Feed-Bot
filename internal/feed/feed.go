@@ -69,6 +69,10 @@ func ProcessNewPosts(ctx context.Context, bot *tgbotapi.BotAPI) {
 		log.Printf("couldn't get new posts: %v", err)
 	}
 
+	if len(posts) > 0 {
+		lastPostID = posts[len(posts)-1].ID
+	}
+
 	for _, post := range posts {
 		text := fmt.Sprintf("%v\n\n%v", post.Title, post.URL)
 		msg := tgbotapi.NewMessage(post.ChatID, text)
@@ -78,7 +82,4 @@ func ProcessNewPosts(ctx context.Context, bot *tgbotapi.BotAPI) {
 		}
 	}
 
-	if len(posts) > 1 {
-		lastPostID = posts[len(posts)-1].ID
-	}
 }

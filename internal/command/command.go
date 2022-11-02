@@ -166,3 +166,20 @@ func (c *StopTicker) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbo
 
 	return nil
 }
+
+type Update struct{}
+
+func (c *Update) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
+	chat := upd.FromChat()
+
+	msg := tgbotapi.NewMessage(chat.ID, "Updates:")
+	msg.ReplyMarkup = consts.UpdateKeyboard
+	_, err := bot.Send(msg)
+	if err != nil {
+		return err
+	}
+
+	feed.ProcessNewPosts(ctx, bot)
+
+	return nil
+}
