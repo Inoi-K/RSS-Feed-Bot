@@ -17,6 +17,7 @@ var (
 	lastPostID int64
 )
 
+// Begin initializes the ticker
 func Begin(ctx context.Context, bot *tgbotapi.BotAPI) {
 	ticker := time.NewTicker(consts.FeedUpdateIntervalSeconds * time.Second)
 
@@ -46,12 +47,14 @@ func Begin(ctx context.Context, bot *tgbotapi.BotAPI) {
 	}
 }
 
+// End stops the ticker
 func End() {
 	if cancel != nil {
 		cancel()
 	}
 }
 
+// tick replies with "tick"
 func tick(bot *tgbotapi.BotAPI, chatID int64) {
 	msg := tgbotapi.NewMessage(chatID, "tick")
 	_, err := bot.Send(msg)
@@ -61,6 +64,8 @@ func tick(bot *tgbotapi.BotAPI, chatID int64) {
 }
 
 // TODO implement new posts on chans & goroutines usage
+
+// ProcessNewPosts handles getting and replying new posts
 func ProcessNewPosts(ctx context.Context, bot *tgbotapi.BotAPI) {
 	db := database.GetDB()
 
@@ -81,5 +86,4 @@ func ProcessNewPosts(ctx context.Context, bot *tgbotapi.BotAPI) {
 			log.Printf("couldn't send post in %v chat: %v", post.ChatID, err)
 		}
 	}
-
 }

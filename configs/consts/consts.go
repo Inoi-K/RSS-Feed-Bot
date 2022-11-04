@@ -1,6 +1,7 @@
 package consts
 
 import (
+	"errors"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"strings"
@@ -31,7 +32,7 @@ const (
 
 	ArgumentsSeparator = " "
 
-	// region ERRORS
+	//region ERROR CODES
 
 	// DuplicationCode aka UniqueConstraintCode
 	DuplicationCode = "23505"
@@ -44,6 +45,8 @@ const (
 
 	//endregion
 )
+
+//region BUTTONS
 
 var (
 	FirstMenuMarkup = tgbotapi.NewInlineKeyboardMarkup(
@@ -65,3 +68,13 @@ var (
 		),
 	)
 )
+
+//endregion
+
+//region ERRORS
+
+var (
+	LongLanguageError = errors.New("language cannot be longer than 2 symbols")
+)
+
+//endregion
