@@ -15,6 +15,8 @@ const (
 	StartCommand       = "start"
 	SubscribeCommand   = "sub"
 	UnsubscribeCommand = "unsub"
+	ActivateCommand    = "act"
+	DeactivateCommand  = "deact"
 	NavigationButton   = "navigation"
 	TutorialButton     = "tutorial"
 	UnsubscribeButton  = "unsubscribe"

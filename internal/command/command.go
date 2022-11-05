@@ -148,3 +148,31 @@ func (c *NavigationButton) Execute(ctx context.Context, bot *tgbotapi.BotAPI, up
 }
 
 //endregion
+
+type Activate struct{}
+
+func (c *Activate) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
+	return AlterSourceIsActive(ctx, bot, upd, args, true)
+}
+
+type Deactivate struct{}
+
+func (c *Deactivate) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
+	return AlterSourceIsActive(ctx, bot, upd, args, false)
+}
+
+func AlterSourceIsActive(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string, isActive bool) error {
+	usr := upd.SentFrom()
+
+	db := database.GetDB()
+
+	urls := strings.Split(args, consts.ArgumentsSeparator)
+	for _, url := range urls {
+		err := db.AlterSourceIsActive(ctx, usr.ID, url, isActive)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

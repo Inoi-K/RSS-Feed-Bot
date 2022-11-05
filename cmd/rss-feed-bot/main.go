@@ -67,5 +67,7 @@ func makeCommands() map[string]command.ICommand {
 		consts.UnsubscribeCommand: &command.Unsubscribe{},
 		consts.UnsubscribeButton:  &command.UnsubscribeButton{},
 		consts.NavigationButton:   &command.NavigationButton{},
+		consts.ActivateCommand:    &command.Activate{},
+		consts.DeactivateCommand:  &command.Deactivate{},
 	}
 }

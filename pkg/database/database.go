@@ -133,3 +133,21 @@ func (db *Database) GetUserSourcesTitleURL(ctx context.Context, userID int64) ([
 
 	return sourceTitleURL, nil
 }
+
+// AlterSourceIsActive activates the source associated it with the user
+func (db *Database) AlterSourceIsActive(ctx context.Context, chatID int64, url string, isActive bool) error {
+	query := fmt.Sprintf("SELECT id FROM schema1.\"source\" WHERE url = '%v' LIMIT 1;", url)
+	var sourceID int64
+	err := db.pool.QueryRow(ctx, query).Scan(&sourceID)
+	if err != nil {
+		return err
+	}
+
+	query = fmt.Sprintf("UPDATE schema1.\"chatSource\" SET \"isActive\" = %v WHERE \"chatID\" = %v AND \"sourceID\" = %v;", isActive, chatID, sourceID)
+	_, err = db.pool.Query(ctx, query)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
