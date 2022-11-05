@@ -17,9 +17,14 @@ const (
 	UnsubscribeCommand = "unsub"
 	ActivateCommand    = "act"
 	DeactivateCommand  = "deact"
-	NavigationButton   = "navigation"
-	TutorialButton     = "tutorial"
-	UnsubscribeButton  = "unsubscribe"
+
+	NavigationButton  = "navigation"
+	TutorialButton    = "tutorial"
+	UnsubscribeButton = "unsubscribe"
+	SetIsActiveButton = "setActive"
+
+	ActivateText   = "activate"
+	DeactivateText = "deactivate"
 
 	NextText = "Next"
 	BackText = "Back"
