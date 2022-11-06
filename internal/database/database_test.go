@@ -104,7 +104,7 @@ func TestGetChatSourcesTitleURL(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			_, got := db.GetChatSourcesTitleURL(ctx, test.chatID)
+			_, got := db.GetChatSourceTitleURL(ctx, test.chatID, nil)
 			if got != test.want {
 				t.Errorf("got %v, want %v", got, test.want)
 			}

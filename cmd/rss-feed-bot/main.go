@@ -59,19 +59,26 @@ func main() {
 	cancel()
 }
 
+// makeCommands creates all bot commands and buttons
 func makeCommands() map[string]command.ICommand {
 	return map[string]command.ICommand{
-		consts.MenuCommand:        &command.Menu{},
-		consts.StartCommand:       &command.Start{},
+		consts.MenuCommand:  &command.Menu{},
+		consts.StartCommand: &command.Start{},
+
 		consts.SubscribeCommand:   &command.Subscribe{},
 		consts.UnsubscribeCommand: &command.Unsubscribe{},
 		consts.UnsubscribeButton:  &command.UnsubscribeButton{},
-		consts.NavigationButton:   &command.NavigationButton{},
-		"tick":                    &command.Ticker{},
-		"stop":                    &command.StopTicker{},
-		consts.UpdateCommand:      &command.Update{},
-		consts.ActivateCommand:    &command.Activate{},
-		consts.DeactivateCommand:  &command.Deactivate{},
-		consts.SetIsActiveButton:  &command.SetIsActiveButton{},
+
+		consts.NavigationButton: &command.NavigationButton{},
+
+		"tick": &command.Ticker{},
+		"stop": &command.StopTicker{},
+
+		consts.UpdateCommand: &command.Update{},
+
+		consts.ActivateCommand:   &command.Activate{},
+		consts.DeactivateCommand: &command.Deactivate{},
+		consts.ActivateButton:    &command.ActivateButton{},
+		consts.DeactivateButton:  &command.DeactivateButton{},
 	}
 }

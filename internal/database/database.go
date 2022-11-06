@@ -116,9 +116,14 @@ func (db *Database) RemoveSource(ctx context.Context, chatID int64, url string) 
 	return nil
 }
 
-// GetChatSourcesTitleURL gets title and url of the all sources associated with the chat
-func (db *Database) GetChatSourcesTitleURL(ctx context.Context, chatID int64) ([][]string, error) {
-	query := fmt.Sprintf("SELECT title, url FROM schema1.\"source\" WHERE id IN (SELECT \"sourceID\" FROM schema1.\"chatSource\" WHERE \"chatID\" = %v);", chatID)
+// GetChatSourceTitleURL gets title and url of the all sources associated with the chat according to chatSource properties
+func (db *Database) GetChatSourceTitleURL(ctx context.Context, chatID int64, cs *structs.ChatSource) ([][]string, error) {
+	var query string
+	if cs != nil {
+		query = fmt.Sprintf("SELECT title, url FROM schema1.source WHERE id IN (SELECT \"sourceID\" FROM schema1.\"chatSource\" WHERE \"chatID\" = %v AND \"isActive\" = %v);", chatID, cs.IsActive)
+	} else {
+		query = fmt.Sprintf("SELECT title, url FROM schema1.\"source\" WHERE id IN (SELECT \"sourceID\" FROM schema1.\"chatSource\" WHERE \"chatID\" = %v);", chatID)
+	}
 	rows, err := db.pool.Query(ctx, query)
 	if err != nil {
 		return nil, err
@@ -161,33 +166,8 @@ func (db *Database) GetNewPosts(ctx context.Context, lastPostID int64) ([]struct
 	return posts, nil
 }
 
-// TODO generalize with GetUserSourcesTitleURL
-
-// GetChatSourcesTitleURLByIsActive gets title and url of the all active/deactive sources associated with the user
-func (db *Database) GetChatSourcesTitleURLByIsActive(ctx context.Context, userID int64, isActive bool) ([][]string, error) {
-	query := fmt.Sprintf("SELECT title, url FROM schema1.source WHERE id IN (SELECT \"sourceID\" FROM schema1.\"chatSource\" WHERE \"chatID\" = %v AND \"isActive\" = %v);", userID, isActive)
-	rows, err := db.pool.Query(ctx, query)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	// TODO refactor []string{title, url} to a struct
-	var sourceTitleURL [][]string
-	for rows.Next() {
-		var sourceTitle, sourceURL string
-		err = rows.Scan(&sourceTitle, &sourceURL)
-		if err != nil {
-			return nil, err
-		}
-		sourceTitleURL = append(sourceTitleURL, []string{sourceTitle, sourceURL})
-	}
-
-	return sourceTitleURL, nil
-}
-
-// AlterSourceIsActive activates the source associated it with the user
-func (db *Database) AlterSourceIsActive(ctx context.Context, chatID int64, url string, isActive bool) error {
+// AlterChatSource activates the source associated it with the user
+func (db *Database) AlterChatSource(ctx context.Context, chatID int64, url string, cs structs.ChatSource) error {
 	query := fmt.Sprintf("SELECT id FROM schema1.\"source\" WHERE url = '%v' LIMIT 1;", url)
 	var sourceID int64
 	err := db.pool.QueryRow(ctx, query).Scan(&sourceID)
@@ -195,7 +175,7 @@ func (db *Database) AlterSourceIsActive(ctx context.Context, chatID int64, url s
 		return err
 	}
 
-	query = fmt.Sprintf("UPDATE schema1.\"chatSource\" SET \"isActive\" = %v WHERE \"chatID\" = %v AND \"sourceID\" = %v;", isActive, chatID, sourceID)
+	query = fmt.Sprintf("UPDATE schema1.\"chatSource\" SET \"isActive\" = %v WHERE \"chatID\" = %v AND \"sourceID\" = %v;", cs.IsActive, chatID, sourceID)
 	_, err = db.pool.Query(ctx, query)
 	if err != nil {
 		return err

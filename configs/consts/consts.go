@@ -26,10 +26,8 @@ const (
 	NavigationButton  = "navigation"
 	TutorialButton    = "tutorial"
 	UnsubscribeButton = "unsubscribe"
-	SetIsActiveButton = "setActive"
-
-	ActivateText   = "activate"
-	DeactivateText = "deactivate"
+	ActivateButton    = "activate"
+	DeactivateButton  = "deactivate"
 
 	//endregion
 
