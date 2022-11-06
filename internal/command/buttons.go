@@ -6,9 +6,10 @@ import (
 	"github.com/Inoi-K/RSS-Feed-Bot/internal/database"
 	"github.com/Inoi-K/RSS-Feed-Bot/internal/structs"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"strings"
 )
 
-// UnsubscribeButton command gets called by button callback from 'Unsubscribe menu' and then removes provided source from the chat
+// UnsubscribeButton gets called by button callback from 'Unsubscribe menu' and removes provided source from the chat
 type UnsubscribeButton struct{}
 
 func (c *UnsubscribeButton) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
@@ -20,7 +21,7 @@ func (c *UnsubscribeButton) Execute(ctx context.Context, bot *tgbotapi.BotAPI, u
 		return err
 	}
 
-	return nil
+	return editInlineChatSourceKeyboard(bot, upd, args)
 }
 
 // NavigationButton gets called by button callback from 'Menu' and handles next/back navigation between menus/pages
@@ -54,30 +55,50 @@ func (c *NavigationButton) Execute(ctx context.Context, bot *tgbotapi.BotAPI, up
 	return nil
 }
 
+// ActivateButton gets called by button callback from 'Activate menu' and switches state of the provided source
 type ActivateButton struct{}
 
 func (c *ActivateButton) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
-	chat := upd.FromChat()
-	db := database.GetDB()
-
-	err := db.AlterChatSource(ctx, chat.ID, args, structs.ChatSource{IsActive: true})
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return setIsActiveButton(ctx, bot, upd, args, true)
 }
 
+// DeactivateButton gets called by button callback from 'Deactivate menu' and switches state of the provided source
 type DeactivateButton struct{}
 
 func (c *DeactivateButton) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
+	return setIsActiveButton(ctx, bot, upd, args, false)
+}
+
+// setIsActiveButton switches provide sources for the chat to provided state
+// and edits the keyboard from which the callback was sent
+func setIsActiveButton(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string, isActive bool) error {
 	chat := upd.FromChat()
 	db := database.GetDB()
 
-	err := db.AlterChatSource(ctx, chat.ID, args, structs.ChatSource{IsActive: false})
+	err := db.AlterChatSource(ctx, chat.ID, args, structs.ChatSource{IsActive: isActive})
 	if err != nil {
 		return err
 	}
 
-	return nil
+	return editInlineChatSourceKeyboard(bot, upd, args)
+}
+
+// editInlineChatSourceKeyboard removes the provided button in the keyboard from which the callback was sent
+func editInlineChatSourceKeyboard(bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
+	message := upd.CallbackQuery.Message
+
+	var newKeyboard [][]tgbotapi.InlineKeyboardButton
+	currentKeyboard := message.ReplyMarkup.InlineKeyboard
+	for rowIndex, row := range currentKeyboard {
+		button := row[0]
+		if strings.HasSuffix(*button.CallbackData, args) {
+			newKeyboard = append(currentKeyboard[:rowIndex], currentKeyboard[rowIndex+1:]...)
+			break
+		}
+	}
+	newMarkup := tgbotapi.NewInlineKeyboardMarkup(newKeyboard...)
+
+	msg := tgbotapi.NewEditMessageReplyMarkup(message.Chat.ID, message.MessageID, newMarkup)
+	_, err := bot.Send(msg)
+	return err
 }

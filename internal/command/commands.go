@@ -11,6 +11,13 @@ import (
 	"strings"
 )
 
+func reply(bot *tgbotapi.BotAPI, chat *tgbotapi.Chat, text string) error {
+	msg := tgbotapi.NewMessage(chat.ID, text)
+	msg.ParseMode = consts.ParseMode
+	_, err := bot.Send(msg)
+	return err
+}
+
 // ICommand provides an interface for all commands and buttons callbacks
 type ICommand interface {
 	Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error
@@ -47,6 +54,9 @@ func (c *Subscribe) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbot
 	db := database.GetDB()
 
 	urls := strings.Split(args, consts.ArgumentsSeparator)
+
+	// TODO add url checker here
+
 	for _, url := range urls {
 		err := db.AddSource(ctx, chat.ID, url)
 		if err != nil {
@@ -54,7 +64,7 @@ func (c *Subscribe) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbot
 		}
 	}
 
-	return nil
+	return reply(bot, chat, "Successfully subscribed")
 }
 
 // Unsubscribe command removes provided sources from the chat
@@ -77,7 +87,7 @@ func (c *Unsubscribe) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgb
 		}
 	} else {
 		infoText := "Please choose a subscription you'd like to unsubscribe from:"
-		err := replyInlineChatSourceButtons(ctx, bot, upd, nil, infoText, consts.UnsubscribeButton)
+		err := replyInlineChatSourceKeyboard(ctx, bot, upd, nil, infoText, consts.UnsubscribeButton)
 		if err != nil {
 			return err
 		}
@@ -125,7 +135,7 @@ func setIsActive(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update,
 		}
 		infoText := fmt.Sprintf("Please choose a subscription you'd like to %v:", state)
 
-		err := replyInlineChatSourceButtons(ctx, bot, upd, &structs.ChatSource{IsActive: isActive}, infoText, state)
+		err := replyInlineChatSourceKeyboard(ctx, bot, upd, &structs.ChatSource{IsActive: !isActive}, infoText, state)
 		if err != nil {
 			return err
 		}
@@ -134,9 +144,9 @@ func setIsActive(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update,
 	return nil
 }
 
-// replyInlineChatSourceButtons gets title and url of the sources associated with the chat
+// replyInlineChatSourceKeyboard gets title and url of the sources associated with the chat
 // and replies with inline buttons with commandButton as their beginning of the data
-func replyInlineChatSourceButtons(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, cs *structs.ChatSource, infoText string, commandButton string) error {
+func replyInlineChatSourceKeyboard(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, cs *structs.ChatSource, infoText string, commandButton string) error {
 	chat := upd.FromChat()
 	db := database.GetDB()
 
@@ -148,14 +158,14 @@ func replyInlineChatSourceButtons(ctx context.Context, bot *tgbotapi.BotAPI, upd
 		return err
 	}
 
-	var buttons [][]tgbotapi.InlineKeyboardButton
+	var keyboard [][]tgbotapi.InlineKeyboardButton
 	for _, sourceTitleURL := range sourcesTitleURL {
 		row := tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData(sourceTitleURL[0], strings.Join([]string{commandButton, sourceTitleURL[1]}, consts.ArgumentsSeparator)),
 		)
-		buttons = append(buttons, row)
+		keyboard = append(keyboard, row)
 	}
-	msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(buttons...)
+	msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(keyboard...)
 
 	_, err = bot.Send(msg)
 	if err != nil {
@@ -171,7 +181,7 @@ type Ticker struct{}
 func (c *Ticker) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
 	feed.Begin(ctx, bot)
 
-	return nil
+	return reply(bot, upd.FromChat(), "Ticker started")
 }
 
 // StopTicker command stops the ticker started in Ticker command
@@ -180,7 +190,7 @@ type StopTicker struct{}
 func (c *StopTicker) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
 	feed.End()
 
-	return nil
+	return reply(bot, upd.FromChat(), "Ticker stopped")
 }
 
 // Update command gets recent posts
