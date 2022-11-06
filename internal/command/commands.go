@@ -210,3 +210,30 @@ func (c *Update) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi
 
 	return nil
 }
+
+// List command shows all current subscriptions of the chat
+type List struct{}
+
+func (c *List) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
+	chat := upd.FromChat()
+	db := database.GetDB()
+
+	sourcesTitleURL, err := db.GetChatSourceTitleURL(ctx, chat.ID, nil)
+	if err != nil {
+		return err
+	}
+
+	text := "*Subscription list*"
+	for _, sourceTitleUrl := range sourcesTitleURL {
+		text += fmt.Sprintf("\n[%v](%v)", sourceTitleUrl[0], sourceTitleUrl[1])
+	}
+
+	msg := tgbotapi.NewMessage(chat.ID, text)
+	msg.ParseMode = consts.ParseMode
+	_, err = bot.Send(msg)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

@@ -22,6 +22,7 @@ const (
 	UpdateCommand      = "upd"
 	ActivateCommand    = "act"
 	DeactivateCommand  = "deact"
+	ListCommand        = "list"
 
 	NavigationButton  = "navigation"
 	TutorialButton    = "tutorial"
