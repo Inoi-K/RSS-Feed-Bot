@@ -70,5 +70,8 @@ func makeCommands() map[string]command.ICommand {
 		"tick":                    &command.Ticker{},
 		"stop":                    &command.StopTicker{},
 		consts.UpdateCommand:      &command.Update{},
+		consts.ActivateCommand:    &command.Activate{},
+		consts.DeactivateCommand:  &command.Deactivate{},
+		consts.SetIsActiveButton:  &command.SetIsActiveButton{},
 	}
 }

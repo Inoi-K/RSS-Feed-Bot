@@ -2,6 +2,7 @@ package command
 
 import (
 	"context"
+	"fmt"
 	"github.com/Inoi-K/RSS-Feed-Bot/configs/consts"
 	"github.com/Inoi-K/RSS-Feed-Bot/internal/database"
 	"github.com/Inoi-K/RSS-Feed-Bot/internal/feed"
@@ -149,7 +150,88 @@ func (c *NavigationButton) Execute(ctx context.Context, bot *tgbotapi.BotAPI, up
 	return nil
 }
 
+type SetIsActiveButton struct{}
+
+func (c *SetIsActiveButton) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
+	chat := upd.FromChat()
+	db := database.GetDB()
+
+	state, args, _ := strings.Cut(args, consts.ArgumentsSeparator)
+	isActive := true
+	if state == consts.DeactivateText {
+		isActive = false
+	}
+
+	err := db.AlterSourceIsActive(ctx, chat.ID, args, isActive)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 //endregion
+
+type Activate struct{}
+
+func (c *Activate) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
+	return SetIsActive(ctx, bot, upd, args, true)
+}
+
+type Deactivate struct{}
+
+func (c *Deactivate) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
+	return SetIsActive(ctx, bot, upd, args, false)
+}
+
+func SetIsActive(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string, isActive bool) error {
+	chat := upd.FromChat()
+
+	db := database.GetDB()
+
+	// Alter sources if args are specified
+	// Otherwise display inline buttons with sources
+	if len(args) > 0 {
+		urls := strings.Split(args, consts.ArgumentsSeparator)
+		for _, url := range urls {
+			err := db.AlterSourceIsActive(ctx, chat.ID, url, isActive)
+			if err != nil {
+				return err
+			}
+		}
+	} else {
+		var stateText string
+		if isActive {
+			stateText = consts.ActivateText
+		} else {
+			stateText = consts.DeactivateText
+		}
+
+		msg := tgbotapi.NewMessage(upd.Message.Chat.ID, fmt.Sprintf("Please choose a subscription you'd like to %v:", stateText))
+		msg.ParseMode = consts.ParseMode
+
+		sourcesTitleURL, err := db.GetChatSourcesTitleURLByIsActive(ctx, chat.ID, !isActive)
+		if err != nil {
+			return err
+		}
+
+		var buttons [][]tgbotapi.InlineKeyboardButton
+		for _, sourceTitleURL := range sourcesTitleURL {
+			row := tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData(sourceTitleURL[0], strings.Join([]string{consts.SetIsActiveButton, stateText, sourceTitleURL[1]}, consts.ArgumentsSeparator)),
+			)
+			buttons = append(buttons, row)
+		}
+		msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(buttons...)
+
+		_, err = bot.Send(msg)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
 
 type Ticker struct{}
 

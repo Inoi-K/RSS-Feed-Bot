@@ -20,10 +20,16 @@ const (
 	SubscribeCommand   = "sub"
 	UnsubscribeCommand = "unsub"
 	UpdateCommand      = "upd"
+	ActivateCommand    = "act"
+	DeactivateCommand  = "deact"
 
 	NavigationButton  = "navigation"
 	TutorialButton    = "tutorial"
 	UnsubscribeButton = "unsubscribe"
+	SetIsActiveButton = "setActive"
+
+	ActivateText   = "activate"
+	DeactivateText = "deactivate"
 
 	//endregion
 
