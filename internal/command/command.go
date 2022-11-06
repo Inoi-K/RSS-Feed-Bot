@@ -3,7 +3,8 @@ package command
 import (
 	"context"
 	"github.com/Inoi-K/RSS-Feed-Bot/configs/consts"
-	"github.com/Inoi-K/RSS-Feed-Bot/pkg/database"
+	"github.com/Inoi-K/RSS-Feed-Bot/internal/database"
+	"github.com/Inoi-K/RSS-Feed-Bot/internal/feed"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"strings"
 )
@@ -24,28 +25,29 @@ func (c *Menu) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.U
 	return err
 }
 
-// Start command begins an interaction with the user and creates the record in database
+// Start command begins an interaction with the chat and creates the record in database
 type Start struct{}
 
 func (c *Start) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
+	chat := upd.FromChat()
 	usr := upd.SentFrom()
 
 	db := database.GetDB()
 
-	return db.AddUser(ctx, usr.ID, usr.LanguageCode)
+	return db.AddChat(ctx, chat.ID, usr.LanguageCode)
 }
 
-// Subscribe command adds sources to database and associates it with the user
+// Subscribe command adds sources to database and associates it with the chat
 type Subscribe struct{}
 
 func (c *Subscribe) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
-	usr := upd.SentFrom()
+	chat := upd.FromChat()
 
 	db := database.GetDB()
 
 	urls := strings.Split(args, consts.ArgumentsSeparator)
 	for _, url := range urls {
-		err := db.AddSource(ctx, usr.ID, url)
+		err := db.AddSource(ctx, chat.ID, url)
 		if err != nil {
 			return err
 		}
@@ -54,11 +56,11 @@ func (c *Subscribe) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbot
 	return nil
 }
 
-// Unsubscribe command removes provided sources from the user or replies with menu with buttons as sources
+// Unsubscribe command removes provided sources from the chat or replies with menu with buttons as sources
 type Unsubscribe struct{}
 
 func (c *Unsubscribe) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
-	usr := upd.SentFrom()
+	chat := upd.FromChat()
 
 	db := database.GetDB()
 
@@ -67,7 +69,7 @@ func (c *Unsubscribe) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgb
 	if len(args) > 0 {
 		urls := strings.Split(args, consts.ArgumentsSeparator)
 		for _, url := range urls {
-			err := db.RemoveSource(ctx, usr.ID, url)
+			err := db.RemoveSource(ctx, chat.ID, url)
 			if err != nil {
 				return err
 			}
@@ -76,7 +78,7 @@ func (c *Unsubscribe) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgb
 		msg := tgbotapi.NewMessage(upd.Message.Chat.ID, "Please choose a subscription you'd like to unsubscribe from:")
 		msg.ParseMode = consts.ParseMode
 
-		sourcesTitleURL, err := db.GetUserSourcesTitleURL(ctx, usr.ID)
+		sourcesTitleURL, err := db.GetChatSourcesTitleURL(ctx, chat.ID)
 		if err != nil {
 			return err
 		}
@@ -101,14 +103,14 @@ func (c *Unsubscribe) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgb
 
 // region Buttons
 
-// UnsubscribeButton command gets called by button callback from 'Unsubscribe menu' and then removes provided source from the user
+// UnsubscribeButton command gets called by button callback from 'Unsubscribe menu' and then removes provided source from the chat
 type UnsubscribeButton struct{}
 
 func (c *UnsubscribeButton) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
-	usr := upd.SentFrom()
+	chat := upd.FromChat()
 	db := database.GetDB()
 
-	err := db.RemoveSource(ctx, usr.ID, args)
+	err := db.RemoveSource(ctx, chat.ID, args)
 	if err != nil {
 		return err
 	}
@@ -148,3 +150,36 @@ func (c *NavigationButton) Execute(ctx context.Context, bot *tgbotapi.BotAPI, up
 }
 
 //endregion
+
+type Ticker struct{}
+
+func (c *Ticker) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
+	feed.Begin(ctx, bot)
+
+	return nil
+}
+
+type StopTicker struct{}
+
+func (c *StopTicker) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
+	feed.End()
+
+	return nil
+}
+
+type Update struct{}
+
+func (c *Update) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
+	chat := upd.FromChat()
+
+	msg := tgbotapi.NewMessage(chat.ID, "Updates:")
+	msg.ReplyMarkup = consts.UpdateKeyboard
+	_, err := bot.Send(msg)
+	if err != nil {
+		return err
+	}
+
+	feed.ProcessNewPosts(ctx, bot)
+
+	return nil
+}
