@@ -55,16 +55,35 @@ func (c *Subscribe) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbot
 
 	urls := strings.Split(args, consts.ArgumentsSeparator)
 
-	// TODO add url checker here
-
 	for _, url := range urls {
+		ans := fmt.Sprintf("*Successfully subscribed*\n[%v](%v)", "SOURCE TITLE", url)
+
+		//res, err := client.Verify(url)
+		//if err != nil {
+		//	ans = fmt.Sprintf("*Failed to subscribe*\n[%v](%v) (%v)", "SOURCE_TITLE", url, err)
+		//}
+		//
+		//if res.IsValid {
+		//	err := db.AddSource(ctx, chat.ID, url)
+		//	if err != nil {
+		//		return err
+		//	}
+		//} else {
+		//	ans = fmt.Sprintf("*Failed to subscribe*\n[%v](%v) (%v)", "SOURCE_TITLE", url, "The link is not valid")
+		//}
+
 		err := db.AddSource(ctx, chat.ID, url)
+		if err != nil {
+			ans = fmt.Sprintf("*Failed to subscribe*\n[%v](%v) (%v)", "SOURCE_TITLE", url, err)
+		}
+
+		err = reply(bot, chat, ans)
 		if err != nil {
 			return err
 		}
 	}
 
-	return reply(bot, chat, "Successfully subscribed")
+	return nil
 }
 
 // Unsubscribe command removes provided sources from the chat
