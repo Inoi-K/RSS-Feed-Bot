@@ -1,0 +1,15 @@
+[0m[[0m[0mdebug[0m] [0m[0m> Exec(run, Some(7191e1d3-e4ab-49d9-a1e1-cc7f3dbccfed), Some(CommandSource(console0)))[0m
+[0m[[0m[0mdebug[0m] [0m[0mEvaluating tasks: Compile / run[0m
+[0m[[0m[0mdebug[0m] [0m[0mRunning task... Cancel: Signal, check cycles: false, forcegc: true[0m
+[0m[[0m[0minfo[0m] [0m[0mFetching artifacts of [0m
+[0m[[0m[0minfo[0m] [0m[0mFetched artifacts of [0m
+[0m[[0m[0minfo[0m] [0m[0mcompiling 2 Scala sources to /Users/georgy/Desktop/study/rss-parser/target/scala-2.13/classes ...[0m
+[0m[[0m[0minfo[0m] [0m[0mNon-compiled module 'compiler-bridge_2.13' for Scala 2.13.8. Compiling...[0m
+[0m[[0m[0minfo[0m] [0m[0m  Compilation completed in 8.528s.[0m
+[0m[[0m[31merror[0m] [0m[0m/Users/georgy/Desktop/study/rss-parser/src/main/scala/rss/Main.scala:4:12: object http is not a member of package zio[0m
+[0m[[0m[31merror[0m] [0m[0mimport zio.http._[0m
+[0m[[0m[31merror[0m] [0m[0m           ^[0m
+[0m[[0m[31merror[0m] [0m[0mone error found[0m
+[0m[[0m[31merror[0m] [0m[0m(Compile / [31mcompileIncremental[0m) Compilation failed[0m
+[0m[[0m[31merror[0m] [0m[0mTotal time: 11 s, completed 13 нояб. 2022 г., 16:15:09[0m
+[0m[[0m[0mdebug[0m] [0m[0m> Exec(shell, None, None)[0m

@@ -1,0 +1,122 @@
+[debug] > Exec(early(addDefaultCommands), None, None)
+[debug] > Exec(addDefaultCommands, None, None)
+[debug] > Exec(early(initialize), None, None)
+[debug] > Exec(initialize, None, None)
+[debug] > Exec(boot, None, None)
+[debug] > Exec(writeSbtVersion, None, None)
+[debug] > Exec(reload, None, None)
+[debug] > Exec(sbtStashOnFailure, None, None)
+[debug] > Exec(onFailure loadFailed, None, None)
+[debug] > Exec(loadp, None, None)
+[info] welcome to sbt 1.8.0 (Oracle Corporation Java 15.0.1)
+[debug]       Load.loadUnit: plugins took 68.940813ms
+[debug]       Load.loadUnit: defsScala took 0.21902ms
+[debug] [Loading] Scanning directory /Users/georgy/.sbt/1.0/plugins
+[debug] [Loading] Found non-root projects 
+[debug] [Loading] Done in /Users/georgy/.sbt/1.0/plugins, returning: ()
+[debug] deducing auto plugins based on known facts Set(Atom(sbt.plugins.CorePlugin)) and clauses Clauses(Clause(Atom(sbt.plugins.JvmPlugin),Set(Atom(sbt.plugins.IvyPlugin)))
+[debug] Clause(Atom(sbt.ScriptedPlugin),Set(Atom(sbt.plugins.JvmPlugin)))
+[debug] Clause(Atom(sbt.plugins.SbtPlugin),Set(Atom(sbt.ScriptedPlugin)))
+[debug] Clause(Atom(sbt.plugins.SemanticdbPlugin),Set(Atom(sbt.plugins.JvmPlugin)))
+[debug] Clause(Atom(sbt.plugins.JUnitXmlReportPlugin),Set(Atom(sbt.plugins.JvmPlugin)))
+[debug] Clause(Atom(sbt.plugins.MiniDependencyTreePlugin),Set(Atom(sbt.plugins.JvmPlugin)))
+[debug] Clause(Atom(sbt.plugins.CorePlugin),Set(Atom(sbt.plugins.IvyPlugin)))
+[debug] Clause(Atom(sbt.plugins.IvyPlugin),Set(Atom(sbt.plugins.JvmPlugin)))
+[debug] Clause(Atom(sbt.plugins.JvmPlugin),Set(Atom(sbt.plugins.SemanticdbPlugin)))
+[debug] Clause(Atom(sbt.plugins.JvmPlugin),Set(Atom(sbt.plugins.JUnitXmlReportPlugin)))
+[debug] Clause(Atom(sbt.plugins.CorePlugin),Set(Atom(sbt.plugins.Giter8TemplatePlugin)))
+[debug] Clause(Atom(sbt.plugins.JvmPlugin),Set(Atom(sbt.plugins.MiniDependencyTreePlugin))))
+[debug]   :: deduced result: Matched(sbt.plugins.CorePlugin,sbt.plugins.Giter8TemplatePlugin,sbt.plugins.IvyPlugin,sbt.plugins.JvmPlugin,sbt.plugins.MiniDependencyTreePlugin,sbt.plugins.JUnitXmlReportPlugin,sbt.plugins.SemanticdbPlugin)
+[debug] Plugins.deducer#function took 15.555136 ms
+[debug]           Load.resolveProject(global-plugins) took 36.59304ms
+[debug]         Load.loadTransitive: finalizeProject(Project(id global-plugins, base: /Users/georgy/.sbt/1.0/plugins, plugins: List(<none>))) took 70.654517ms
+[debug] [Loading] Done in /Users/georgy/.sbt/1.0/plugins, returning: (global-plugins)
+[debug]       Load.loadUnit: loadedProjectsRaw took 88.90564ms
+[debug]       Load.loadUnit: cleanEvalClasses took 0.231023ms
+[debug]     Load.loadUnit(file:/Users/georgy/.sbt/1.0/plugins/, ...) took 167.462988ms
+[debug]   Load.apply: load took 411.563839ms
+[debug]   Load.apply: resolveProjects took 5.454993ms
+[debug]   Load.apply: finalTransforms took 54.454065ms
+[debug]   Load.apply: config.delegates took 6.665587ms
+[debug]   Load.apply: Def.make(settings)... took 304.230294ms
+[debug]   Load.apply: structureIndex took 72.112694ms
+[debug]   Load.apply: mkStreams took 0.962556ms
+[info] loading global plugins from /Users/georgy/.sbt/1.0/plugins
+[debug] Running task... Cancel: Signal, check cycles: false, forcegc: true
+[debug] Load.defaultLoad until apply took 1760.67076ms
+[debug]           Load.loadUnit: plugins took 15.947835ms
+[debug]           Load.loadUnit: defsScala took 0.003178ms
+[debug] [Loading] Scanning directory /Users/georgy/Desktop/study/rss-parser/project
+[debug] [Loading] Found non-root projects 
+[debug] [Loading] Done in /Users/georgy/Desktop/study/rss-parser/project, returning: ()
+[debug] deducing auto plugins based on known facts Set(Atom(sbt.plugins.CorePlugin)) and clauses Clauses(Clause(Atom(sbt.plugins.JvmPlugin),Set(Atom(sbt.plugins.IvyPlugin)))
+[debug] Clause(Atom(sbt.ScriptedPlugin),Set(Atom(sbt.plugins.JvmPlugin)))
+[debug] Clause(Atom(sbt.plugins.SbtPlugin),Set(Atom(sbt.ScriptedPlugin)))
+[debug] Clause(Atom(sbt.plugins.SemanticdbPlugin),Set(Atom(sbt.plugins.JvmPlugin)))
+[debug] Clause(Atom(sbt.plugins.JUnitXmlReportPlugin),Set(Atom(sbt.plugins.JvmPlugin)))
+[debug] Clause(Atom(sbt.plugins.MiniDependencyTreePlugin),Set(Atom(sbt.plugins.JvmPlugin)))
+[debug] Clause(Atom(sbt.plugins.CorePlugin),Set(Atom(sbt.plugins.IvyPlugin)))
+[debug] Clause(Atom(sbt.plugins.IvyPlugin),Set(Atom(sbt.plugins.JvmPlugin)))
+[debug] Clause(Atom(sbt.plugins.JvmPlugin),Set(Atom(sbt.plugins.SemanticdbPlugin)))
+[debug] Clause(Atom(sbt.plugins.JvmPlugin),Set(Atom(sbt.plugins.JUnitXmlReportPlugin)))
+[debug] Clause(Atom(sbt.plugins.CorePlugin),Set(Atom(sbt.plugins.Giter8TemplatePlugin)))
+[debug] Clause(Atom(sbt.plugins.JvmPlugin),Set(Atom(sbt.plugins.MiniDependencyTreePlugin))))
+[debug]   :: deduced result: Matched(sbt.plugins.CorePlugin,sbt.plugins.Giter8TemplatePlugin,sbt.plugins.IvyPlugin,sbt.plugins.JvmPlugin,sbt.plugins.MiniDependencyTreePlugin,sbt.plugins.JUnitXmlReportPlugin,sbt.plugins.SemanticdbPlugin)
+[debug] Plugins.deducer#function took 1.455016 ms
+[debug]               Load.resolveProject(rss-parser-build) took 0.839171ms
+[debug]             Load.loadTransitive: finalizeProject(Project(id rss-parser-build, base: /Users/georgy/Desktop/study/rss-parser/project, plugins: List(<none>))) took 2.695371ms
+[debug] [Loading] Done in /Users/georgy/Desktop/study/rss-parser/project, returning: (rss-parser-build)
+[debug]           Load.loadUnit: loadedProjectsRaw took 4.104982ms
+[debug]           Load.loadUnit: cleanEvalClasses took 0.021473ms
+[debug]         Load.loadUnit(file:/Users/georgy/Desktop/study/rss-parser/project/, ...) took 20.606546ms
+[debug]       Load.apply: load took 21.594348ms
+[debug]       Load.apply: resolveProjects took 0.111108ms
+[debug]       Load.apply: finalTransforms took 9.712444ms
+[debug]       Load.apply: config.delegates took 0.296341ms
+[debug]       Load.apply: Def.make(settings)... took 68.533584ms
+[debug]       Load.apply: structureIndex took 23.251265ms
+[debug]       Load.apply: mkStreams took 0.002125ms
+[info] loading project definition from /Users/georgy/Desktop/study/rss-parser/project
+[debug] Running task... Cancel: Signal, check cycles: false, forcegc: true
+[debug]     Load.loadUnit: plugins took 301.056002ms
+[debug]     Load.loadUnit: defsScala took 0.004189ms
+[debug] [Loading] Scanning directory /Users/georgy/Desktop/study/rss-parser
+[debug]       Load.loadUnit: mkEval took 4.38234ms
+[debug] [Loading] Found root project root w/ remaining 
+[debug] deducing auto plugins based on known facts Set(Atom(sbt.plugins.CorePlugin)) and clauses Clauses(Clause(Atom(sbt.plugins.JvmPlugin),Set(Atom(sbt.plugins.IvyPlugin)))
+[debug] Clause(Atom(sbt.ScriptedPlugin),Set(Atom(sbt.plugins.JvmPlugin)))
+[debug] Clause(Atom(sbt.plugins.SbtPlugin),Set(Atom(sbt.ScriptedPlugin)))
+[debug] Clause(Atom(sbt.plugins.SemanticdbPlugin),Set(Atom(sbt.plugins.JvmPlugin)))
+[debug] Clause(Atom(sbt.plugins.JUnitXmlReportPlugin),Set(Atom(sbt.plugins.JvmPlugin)))
+[debug] Clause(Atom(sbt.plugins.MiniDependencyTreePlugin),Set(Atom(sbt.plugins.JvmPlugin)))
+[debug] Clause(Atom(sbt.plugins.CorePlugin),Set(Atom(sbt.plugins.IvyPlugin)))
+[debug] Clause(Atom(sbt.plugins.IvyPlugin),Set(Atom(sbt.plugins.JvmPlugin)))
+[debug] Clause(Atom(sbt.plugins.JvmPlugin),Set(Atom(sbt.plugins.SemanticdbPlugin)))
+[debug] Clause(Atom(sbt.plugins.JvmPlugin),Set(Atom(sbt.plugins.JUnitXmlReportPlugin)))
+[debug] Clause(Atom(sbt.plugins.CorePlugin),Set(Atom(sbt.plugins.Giter8TemplatePlugin)))
+[debug] Clause(Atom(sbt.plugins.JvmPlugin),Set(Atom(sbt.plugins.MiniDependencyTreePlugin))))
+[debug]   :: deduced result: Matched(sbt.plugins.CorePlugin,sbt.plugins.Giter8TemplatePlugin,sbt.plugins.IvyPlugin,sbt.plugins.JvmPlugin,sbt.plugins.MiniDependencyTreePlugin,sbt.plugins.JUnitXmlReportPlugin,sbt.plugins.SemanticdbPlugin)
+[debug] Plugins.deducer#function took 1.124948 ms
+[info] loading settings for project root from build.sbt ...
+[debug]         Load.resolveProject(root) took 2.040388ms
+[debug]       Load.loadTransitive: finalizeProject(Project(id root, base: /Users/georgy/Desktop/study/rss-parser, plugins: List(<none>))) took 4.122126ms
+[debug] [Loading] Done in /Users/georgy/Desktop/study/rss-parser, returning: (root)
+[debug]     Load.loadUnit: loadedProjectsRaw took 1340.207781ms
+[debug]     Load.loadUnit: cleanEvalClasses took 5.797883ms
+[debug]   Load.loadUnit(file:/Users/georgy/Desktop/study/rss-parser/, ...) took 1647.844124ms
+[debug] Load.apply: load took 1648.971678ms
+[debug] Load.apply: resolveProjects took 0.118784ms
+[debug] Load.apply: finalTransforms took 11.190258ms
+[debug] Load.apply: config.delegates took 0.336579ms
+[debug] Load.apply: Def.make(settings)... took 70.903213ms
+[debug] Load.apply: structureIndex took 30.78308ms
+[debug] Load.apply: mkStreams took 0.002396ms
+[info] set current project to rss-parser (in build file:/Users/georgy/Desktop/study/rss-parser/)
+[debug] > Exec(sbtPopOnFailure, None, None)
+[debug] > Exec(resumeFromFailure, None, None)
+[debug] > Exec(notifyUsersAboutShell, None, None)
+[debug] > Exec(iflast shell, None, None)
+[debug] > Exec(shell, None, None)
+[info] sbt server started at local:///Users/georgy/.sbt/1.0/server/4d075737ca9d4bab66fa/sock
+[debug] Writing bsp connection file
+[info] started sbt server

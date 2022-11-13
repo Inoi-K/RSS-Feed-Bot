@@ -1,0 +1,15 @@
+[0m[[0m[0mdebug[0m] [0m[0m> Exec(compile, Some(03175ae5-0ac2-425a-9081-6b26acf333ae), Some(CommandSource(console0)))[0m
+[0m[[0m[0mdebug[0m] [0m[0mEvaluating tasks: Compile / compile[0m
+[0m[[0m[0mdebug[0m] [0m[0mRunning task... Cancel: Signal, check cycles: false, forcegc: true[0m
+[0m[[0m[0minfo[0m] [0m[0mcompiling 1 Scala source to /Users/georgy/Desktop/study/rss-parser/target/scala-2.13/classes ...[0m
+[0m[[0m[0minfo[0m] [0m[0mNon-compiled module 'compiler-bridge_2.13' for Scala 2.13.10. Compiling...[0m
+[0m[[0m[0minfo[0m] [0m[0m  Compilation completed in 8.83s.[0m
+[0m[[0m[0minfo[0m] [0m[0m/Users/georgy/Desktop/study/rss-parser/src/main/scala/Main.scala:1:1: [0m
+[0m[[0m[0minfo[0m] [0m[0mFound names but no class, trait or object is defined in the compilation unit.[0m
+[0m[[0m[0minfo[0m] [0m[0mThe incremental compiler cannot record the dependency information in such case.[0m
+[0m[[0m[0minfo[0m] [0m[0mSome errors like unused import referring to a non-existent class might not be reported.[0m
+[0m[[0m[0minfo[0m] [0m[0m    [0m
+[0m[[0m[0minfo[0m] [0m[0mimport zio._[0m
+[0m[[0m[0minfo[0m] [0m[0m^[0m
+[0m[[0m[32msuccess[0m] [0m[0mTotal time: 12 s, completed 12 нояб. 2022 г., 22:28:46[0m
+[0m[[0m[0mdebug[0m] [0m[0m> Exec(shell, None, None)[0m
