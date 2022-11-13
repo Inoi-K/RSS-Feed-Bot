@@ -58,7 +58,7 @@ func (c *Subscribe) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbot
 	for _, url := range urls {
 		ans := fmt.Sprintf("*Successfully subscribed*\n[%v](%v)", "SOURCE TITLE", url)
 
-		//res, err := client.Verify(url)
+		//res, err := client.Validate(url)
 		//if err != nil {
 		//	ans = fmt.Sprintf("*Failed to subscribe*\n[%v](%v) (%v)", "SOURCE_TITLE", url, err)
 		//}

@@ -10,8 +10,8 @@ import (
 	"time"
 )
 
-// Verify sends REST request "is the link valid" to RSS service and returns the result
-func Verify(url string) (*api.Result, error) {
+// Validate sends REST request "is the link valid" to RSS service and returns the result
+func Validate(url string) (*api.Result, error) {
 	source := api.Source{Link: url}
 	reqBody, err := json.Marshal(source)
 	if err != nil {
