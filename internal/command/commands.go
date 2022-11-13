@@ -63,7 +63,7 @@ func (c *Subscribe) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbot
 		//	ans = fmt.Sprintf("*Failed to subscribe*\n[%v](%v) (%v)", "SOURCE_TITLE", url, err)
 		//}
 		//
-		//if res.IsValid {
+		//if res.Valid {
 		//	err := db.AddSource(ctx, chat.ID, url)
 		//	if err != nil {
 		//		return err

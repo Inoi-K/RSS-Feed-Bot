@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"context"
-	"flag"
 	"github.com/Inoi-K/RSS-Feed-Bot/configs/consts"
 	"github.com/Inoi-K/RSS-Feed-Bot/configs/flags"
 	"github.com/Inoi-K/RSS-Feed-Bot/internal/command"
@@ -20,8 +19,6 @@ var (
 )
 
 func main() {
-	flag.Parse()
-
 	var err error
 	// Connect to the bot
 	bot, err = tgbotapi.NewBotAPI(*flags.Token)
