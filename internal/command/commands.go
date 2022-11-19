@@ -243,8 +243,8 @@ func (c *List) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.U
 	}
 
 	text := "*Subscription list*"
-	for _, sourceTitleUrl := range sourcesTitleURL {
-		text += fmt.Sprintf("\n[%v](%v)", sourceTitleUrl[0], sourceTitleUrl[1])
+	for _, sourceTitleURL := range sourcesTitleURL {
+		text += fmt.Sprintf("\n[%v](%v)", sourceTitleURL[0], sourceTitleURL[1])
 	}
 
 	msg := tgbotapi.NewMessage(chat.ID, text)
