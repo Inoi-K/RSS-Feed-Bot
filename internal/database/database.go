@@ -70,8 +70,8 @@ func (db *Database) AddChat(ctx context.Context, chatID int64, lang string) erro
 // TODO insert multiple rows in one query
 
 // AddSource adds one source in database and associates it with the chat
-func (db *Database) AddSource(ctx context.Context, chatID int64, url string) error {
-	query := fmt.Sprintf("INSERT INTO source (url) VALUES ('%v') RETURNING id;", url)
+func (db *Database) AddSource(ctx context.Context, chatID int64, title string, url string) error {
+	query := fmt.Sprintf("INSERT INTO source (title, url) VALUES ('%v', '%v') RETURNING id;", title, url)
 	var sourceID int64
 	err := db.pool.QueryRow(ctx, query).Scan(&sourceID)
 	if err != nil {

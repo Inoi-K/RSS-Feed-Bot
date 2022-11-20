@@ -23,7 +23,7 @@ func Validate(url string) (*api.Result, error) {
 		return nil, err
 	}
 
-	client := http.Client{Timeout: 30 * time.Second}
+	client := http.Client{Timeout: 10 * time.Second}
 	res, err := client.Do(req)
 	if err != nil {
 		return nil, err
@@ -31,11 +31,11 @@ func Validate(url string) (*api.Result, error) {
 	defer res.Body.Close()
 	resBody, err := io.ReadAll(res.Body)
 
-	var result *api.Result
-	err = json.Unmarshal(resBody, result)
+	var result api.Result
+	err = json.Unmarshal(resBody, &result)
 	if err != nil {
 		return nil, err
 	}
 
-	return result, nil
+	return &result, nil
 }

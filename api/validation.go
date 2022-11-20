@@ -7,5 +7,6 @@ type Source struct {
 
 // Result represents a JSON object to receive from RSS service
 type Result struct {
-	Valid bool `json:"valid,omitempty"`
+	Valid bool   `json:"valid,omitempty"`
+	Title string `json:"title,omitempty"`
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/Inoi-K/RSS-Feed-Bot/configs/consts"
+	"github.com/Inoi-K/RSS-Feed-Bot/internal/client"
 	"github.com/Inoi-K/RSS-Feed-Bot/internal/database"
 	"github.com/Inoi-K/RSS-Feed-Bot/internal/feed"
 	"github.com/Inoi-K/RSS-Feed-Bot/internal/structs"
@@ -54,29 +55,43 @@ func (c *Subscribe) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbot
 	db := database.GetDB()
 
 	urls := strings.Split(args, consts.ArgumentsSeparator)
-
 	for _, url := range urls {
-		ans := fmt.Sprintf("*Successfully subscribed*\n[%v](%v)", "SOURCE TITLE", url)
+		res, err := client.Validate(url)
+		if err != nil {
+			ans := fmt.Sprintf("*Failed to subscribe*\n%v", err)
+			err = reply(bot, chat, ans)
+			if err != nil {
+				return err
+			}
+			continue
+		}
 
-		//res, err := client.Validate(url)
+		if res.Valid {
+			err := db.AddSource(ctx, chat.ID, res.Title, url)
+			if err != nil {
+				return err
+			}
+		} else {
+			ans := fmt.Sprintf("*Failed to subscribe*\n%v", "The link is not valid")
+			err = reply(bot, chat, ans)
+			if err != nil {
+				return err
+			}
+			continue
+		}
+
+		// NO VALIDATION
+		//err = db.AddSource(ctx, chat.ID, res.Title, url)
 		//if err != nil {
-		//	ans = fmt.Sprintf("*Failed to subscribe*\n[%v](%v) (%v)", "SOURCE_TITLE", url, err)
-		//}
-		//
-		//if res.Valid {
-		//	err := db.AddSource(ctx, chat.ID, url)
+		//	ans := fmt.Sprintf("*Failed to subscribe*\n[%v](%v) \\(%v\\)", res.Title, url, err)
+		//	err = reply(bot, chat, ans)
 		//	if err != nil {
 		//		return err
 		//	}
-		//} else {
-		//	ans = fmt.Sprintf("*Failed to subscribe*\n[%v](%v) (%v)", "SOURCE_TITLE", url, "The link is not valid")
+		//	continue
 		//}
 
-		err := db.AddSource(ctx, chat.ID, url)
-		if err != nil {
-			ans = fmt.Sprintf("*Failed to subscribe*\n[%v](%v) (%v)", "SOURCE_TITLE", url, err)
-		}
-
+		ans := fmt.Sprintf("*Successfully subscribed*\n[%v](%v)", res.Title, url)
 		err = reply(bot, chat, ans)
 		if err != nil {
 			return err
@@ -247,12 +262,5 @@ func (c *List) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.U
 		text += fmt.Sprintf("\n[%v](%v)", sourceTitleURL[0], sourceTitleURL[1])
 	}
 
-	msg := tgbotapi.NewMessage(chat.ID, text)
-	msg.ParseMode = consts.ParseMode
-	_, err = bot.Send(msg)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return reply(bot, chat, text)
 }
