@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"context"
 	"github.com/Inoi-K/RSS-Feed-Bot/configs/consts"
 	"github.com/Inoi-K/RSS-Feed-Bot/configs/flags"
@@ -9,7 +8,6 @@ import (
 	"github.com/Inoi-K/RSS-Feed-Bot/internal/database"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
-	"os"
 )
 
 var (
@@ -49,10 +47,12 @@ func main() {
 	go receiveUpdates(ctx, updates)
 
 	// Tell the user the bot is online
-	log.Println("Start listening for updates. Press enter to stop")
+	log.Println("Start listening for updates...")
+
+	select {}
 
 	// Wait for a newline symbol, then cancel handling updates
-	bufio.NewReader(os.Stdin).ReadBytes('\n')
+	//bufio.NewReader(os.Stdin).ReadBytes('\n')
 	cancel()
 }
 
