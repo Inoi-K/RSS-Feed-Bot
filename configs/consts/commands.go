@@ -9,6 +9,7 @@ const (
 	ActivateCommand    = "act"
 	DeactivateCommand  = "deact"
 	ListCommand        = "list"
+	HelpCommand        = "help"
 
 	// CALLBACKS
 

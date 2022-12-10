@@ -79,5 +79,6 @@ func makeCommands() map[string]command.ICommand {
 		consts.DeactivateButton:  &command.DeactivateButton{},
 
 		consts.ListCommand: &command.List{},
+		consts.HelpCommand: &command.Help{},
 	}
 }

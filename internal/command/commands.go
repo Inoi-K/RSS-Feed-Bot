@@ -43,8 +43,13 @@ func (c *Start) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.
 	usr := upd.SentFrom()
 
 	db := database.GetDB()
+	err := db.AddChat(ctx, chat.ID, usr.LanguageCode)
+	if err != nil {
+		return err
+	}
 
-	return db.AddChat(ctx, chat.ID, usr.LanguageCode)
+	defer reply(bot, chat, consts.LocText[usr.LanguageCode][consts.HelpCommand])
+	return reply(bot, chat, consts.LocText[usr.LanguageCode][consts.StartCommand])
 }
 
 // Subscribe command adds sources to database and associates it with the chat
@@ -52,13 +57,15 @@ type Subscribe struct{}
 
 func (c *Subscribe) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
 	chat := upd.FromChat()
+	usr := upd.SentFrom()
 	db := database.GetDB()
 
 	urls := strings.Split(args, consts.ArgumentsSeparator)
 	for _, url := range urls {
+		// VALIDATION
 		res, err := client.Validate(url)
 		if err != nil {
-			ans := fmt.Sprintf("*Failed to subscribe*\n%v", err)
+			ans := fmt.Sprintf(consts.LocText[usr.LanguageCode][consts.SubscribeCommandFail], err)
 			err = reply(bot, chat, ans)
 			if err != nil {
 				return err
@@ -72,7 +79,7 @@ func (c *Subscribe) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbot
 				return err
 			}
 		} else {
-			ans := fmt.Sprintf("*Failed to subscribe*\n%v", "The link is not valid")
+			ans := fmt.Sprintf(consts.LocText[usr.LanguageCode][consts.SubscribeCommandFail], consts.LocText[usr.LanguageCode][consts.NotValidLink])
 			err = reply(bot, chat, ans)
 			if err != nil {
 				return err
@@ -81,9 +88,9 @@ func (c *Subscribe) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbot
 		}
 
 		// NO VALIDATION
-		//err = db.AddSource(ctx, chat.ID, res.Title, url)
+		//err := db.AddSource(ctx, chat.ID, "testtitle", url)
 		//if err != nil {
-		//	ans := fmt.Sprintf("*Failed to subscribe*\n[%v](%v) \\(%v\\)", res.Title, url, err)
+		//	ans := fmt.Sprintf(consts.LocText[usr.LanguageCode][consts.SubscribeCommandFail], consts.LocText[usr.LanguageCode][consts.NotValidLink])
 		//	err = reply(bot, chat, ans)
 		//	if err != nil {
 		//		return err
@@ -91,7 +98,7 @@ func (c *Subscribe) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbot
 		//	continue
 		//}
 
-		ans := fmt.Sprintf("*Successfully subscribed*\n[%v](%v)", res.Title, url)
+		ans := fmt.Sprintf(consts.LocText[usr.LanguageCode][consts.SubscribeCommand], res.Title, url)
 		err = reply(bot, chat, ans)
 		if err != nil {
 			return err
@@ -107,6 +114,7 @@ type Unsubscribe struct{}
 
 func (c *Unsubscribe) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
 	chat := upd.FromChat()
+	usr := upd.SentFrom()
 	db := database.GetDB()
 
 	// Remove urls if args are specified
@@ -120,7 +128,7 @@ func (c *Unsubscribe) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgb
 			}
 		}
 	} else {
-		infoText := "Please choose a subscription you'd like to unsubscribe from:"
+		infoText := consts.LocText[usr.LanguageCode][consts.UnsubscribeCommand]
 		err := replyInlineChatSourceKeyboard(ctx, bot, upd, nil, infoText, consts.UnsubscribeButton)
 		if err != nil {
 			return err
@@ -148,6 +156,7 @@ func (c *Deactivate) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbo
 // or replies with menu with inline buttons as corresponding sources
 func setIsActive(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string, isActive bool) error {
 	chat := upd.FromChat()
+	usr := upd.SentFrom()
 	db := database.GetDB()
 
 	// Alter sources if args are specified
@@ -167,7 +176,7 @@ func setIsActive(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update,
 		} else {
 			state = consts.DeactivateButton
 		}
-		infoText := fmt.Sprintf("Please choose a subscription you'd like to %v:", state)
+		infoText := fmt.Sprintf(consts.LocText[usr.LanguageCode][consts.ActivateCommand], state)
 
 		err := replyInlineChatSourceKeyboard(ctx, bot, upd, &structs.ChatSource{IsActive: !isActive}, infoText, state)
 		if err != nil {
@@ -232,8 +241,10 @@ type Update struct{}
 
 func (c *Update) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
 	chat := upd.FromChat()
+	usr := upd.SentFrom()
 
-	msg := tgbotapi.NewMessage(chat.ID, "Updates:")
+	text := consts.LocText[usr.LanguageCode][consts.UpdateCommand]
+	msg := tgbotapi.NewMessage(chat.ID, text)
 	msg.ReplyMarkup = consts.UpdateKeyboard
 	_, err := bot.Send(msg)
 	if err != nil {
@@ -250,6 +261,7 @@ type List struct{}
 
 func (c *List) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
 	chat := upd.FromChat()
+	usr := upd.SentFrom()
 	db := database.GetDB()
 
 	sourcesTitleURL, err := db.GetChatSourceTitleURL(ctx, chat.ID, nil)
@@ -257,10 +269,20 @@ func (c *List) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.U
 		return err
 	}
 
-	text := "*Subscription list*"
+	text := consts.LocText[usr.LanguageCode][consts.ListCommand]
 	for _, sourceTitleURL := range sourcesTitleURL {
 		text += fmt.Sprintf("\n[%v](%v)", sourceTitleURL[0], sourceTitleURL[1])
 	}
 
 	return reply(bot, chat, text)
+}
+
+// Help command shows information about all commands
+type Help struct{}
+
+func (c *Help) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
+	chat := upd.FromChat()
+	usr := upd.SentFrom()
+
+	return reply(bot, chat, consts.LocText[usr.LanguageCode][consts.HelpCommand])
 }
