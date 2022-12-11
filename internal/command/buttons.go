@@ -4,8 +4,9 @@ import (
 	"context"
 	"github.com/Inoi-K/RSS-Feed-Bot/configs/consts"
 	"github.com/Inoi-K/RSS-Feed-Bot/internal/database"
-	"github.com/Inoi-K/RSS-Feed-Bot/internal/structs"
+	"github.com/Inoi-K/RSS-Feed-Bot/internal/model"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"strconv"
 	"strings"
 )
 
@@ -16,7 +17,11 @@ func (c *UnsubscribeButton) Execute(ctx context.Context, bot *tgbotapi.BotAPI, u
 	chat := upd.FromChat()
 	db := database.GetDB()
 
-	err := db.RemoveSource(ctx, chat.ID, args)
+	sourceID, err := strconv.Atoi(args)
+	if err != nil {
+		return err
+	}
+	err = db.RemoveSourceByID(ctx, chat.ID, int64(sourceID))
 	if err != nil {
 		return err
 	}
@@ -75,7 +80,11 @@ func setIsActiveButton(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.U
 	chat := upd.FromChat()
 	db := database.GetDB()
 
-	err := db.AlterChatSource(ctx, chat.ID, args, structs.ChatSource{IsActive: isActive})
+	sourceID, err := strconv.Atoi(args)
+	if err != nil {
+		return err
+	}
+	err = db.AlterChatSourceByID(ctx, chat.ID, int64(sourceID), model.ChatSource{IsActive: isActive})
 	if err != nil {
 		return err
 	}
