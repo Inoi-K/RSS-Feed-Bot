@@ -1,16 +1,14 @@
 package main
 
 import (
-	"bufio"
 	"context"
-	"flag"
 	"github.com/Inoi-K/RSS-Feed-Bot/configs/consts"
 	"github.com/Inoi-K/RSS-Feed-Bot/configs/flags"
 	"github.com/Inoi-K/RSS-Feed-Bot/internal/command"
 	"github.com/Inoi-K/RSS-Feed-Bot/internal/database"
+	"github.com/Inoi-K/RSS-Feed-Bot/internal/feed"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
-	"os"
 )
 
 var (
@@ -20,8 +18,6 @@ var (
 )
 
 func main() {
-	flag.Parse()
-
 	var err error
 	// Connect to the bot
 	bot, err = tgbotapi.NewBotAPI(*flags.Token)
@@ -39,6 +35,7 @@ func main() {
 	// Create a new database connection
 	db, err = database.ConnectDB(ctx)
 
+	// Generate structs for commands
 	commands = makeCommands()
 
 	// Set update rate
@@ -51,11 +48,16 @@ func main() {
 	// Pass cancellable context to goroutine
 	go receiveUpdates(ctx, updates)
 
+	// Begin feed updating
+	feed.Begin(ctx, bot)
+
 	// Tell the user the bot is online
-	log.Println("Start listening for updates. Press enter to stop")
+	log.Println("Start listening for updates...")
+
+	select {}
 
 	// Wait for a newline symbol, then cancel handling updates
-	bufio.NewReader(os.Stdin).ReadBytes('\n')
+	//bufio.NewReader(os.Stdin).ReadBytes('\n')
 	cancel()
 }
 
@@ -71,8 +73,8 @@ func makeCommands() map[string]command.ICommand {
 
 		consts.NavigationButton: &command.NavigationButton{},
 
-		"tick": &command.Ticker{},
-		"stop": &command.StopTicker{},
+		//"tick": &command.Ticker{},
+		//"cancel": &command.StopTicker{},
 
 		consts.UpdateCommand: &command.Update{},
 
@@ -82,5 +84,6 @@ func makeCommands() map[string]command.ICommand {
 		consts.DeactivateButton:  &command.DeactivateButton{},
 
 		consts.ListCommand: &command.List{},
+		consts.HelpCommand: &command.Help{},
 	}
 }

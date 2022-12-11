@@ -64,7 +64,10 @@ func handleMessage(ctx context.Context, update tgbotapi.Update) {
 // handleCommand handles commands specifically
 func handleCommand(ctx context.Context, update tgbotapi.Update) error {
 	curCommand := update.Message.Command()
-	return commands[curCommand].Execute(ctx, bot, update, update.Message.CommandArguments())
+	if cmd, ok := commands[curCommand]; ok {
+		return cmd.Execute(ctx, bot, update, update.Message.CommandArguments())
+	}
+	return consts.UnknownCommandError
 }
 
 // handleButton handles buttons callback specifically
