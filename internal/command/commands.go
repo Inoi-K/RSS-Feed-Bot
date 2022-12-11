@@ -135,6 +135,8 @@ func (c *Unsubscribe) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgb
 			if err != nil {
 				return err
 			}
+			ans := fmt.Sprintf(consts.LocText[usr.LanguageCode][consts.UnsubscribeCommandSuccess], url)
+			err = reply(bot, chat, ans)
 		}
 	} else {
 		infoText := consts.LocText[usr.LanguageCode][consts.UnsubscribeCommand]
@@ -205,7 +207,7 @@ func replyInlineChatSourceKeyboard(ctx context.Context, bot *tgbotapi.BotAPI, up
 	msg := tgbotapi.NewMessage(upd.Message.Chat.ID, infoText)
 	msg.ParseMode = consts.ParseMode
 
-	sourcesTitleURL, err := db.GetChatSourceTitleURL(ctx, chat.ID, cs)
+	sourcesTitleURL, err := db.GetChatSourceTitleID(ctx, chat.ID, cs)
 	if err != nil {
 		return err
 	}
@@ -273,7 +275,7 @@ func (c *List) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.U
 	usr := upd.SentFrom()
 	db := database.GetDB()
 
-	sourcesTitleURL, err := db.GetChatSourceTitleURL(ctx, chat.ID, nil)
+	sourcesTitleURL, err := db.GetChatSourceTitleID(ctx, chat.ID, nil)
 	if err != nil {
 		return err
 	}

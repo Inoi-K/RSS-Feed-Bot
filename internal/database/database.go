@@ -98,7 +98,7 @@ func (db *Database) AddSource(ctx context.Context, chatID int64, title string, u
 	return nil
 }
 
-// RemoveSource removes source chat-source connection
+// RemoveSource removes source chat-source connection by source url
 func (db *Database) RemoveSource(ctx context.Context, chatID int64, url string) error {
 	query := fmt.Sprintf("SELECT id FROM source WHERE url = '%v' LIMIT 1;", url)
 	var sourceID int64
@@ -107,8 +107,13 @@ func (db *Database) RemoveSource(ctx context.Context, chatID int64, url string) 
 		return err
 	}
 
-	query = fmt.Sprintf("DELETE FROM chat_source WHERE chatid = %v AND sourceid = %v;", chatID, sourceID)
-	_, err = db.pool.Query(ctx, query)
+	return db.RemoveSourceByID(ctx, chatID, sourceID)
+}
+
+// RemoveSourceByID removes source chat-source connection by source id
+func (db *Database) RemoveSourceByID(ctx context.Context, chatID int64, sourceID int64) error {
+	query := fmt.Sprintf("DELETE FROM chat_source WHERE chatid = %v AND sourceid = %v;", chatID, sourceID)
+	_, err := db.pool.Query(ctx, query)
 	if err != nil {
 		return err
 	}
@@ -116,13 +121,13 @@ func (db *Database) RemoveSource(ctx context.Context, chatID int64, url string) 
 	return nil
 }
 
-// GetChatSourceTitleURL gets title and url of the all sources associated with the chat according to chat_source properties
-func (db *Database) GetChatSourceTitleURL(ctx context.Context, chatID int64, cs *model.ChatSource) ([][]string, error) {
+// GetChatSourceTitleID gets title and url of the all sources associated with the chat according to chat_source properties
+func (db *Database) GetChatSourceTitleID(ctx context.Context, chatID int64, cs *model.ChatSource) ([][]string, error) {
 	var query string
 	if cs != nil {
-		query = fmt.Sprintf("SELECT title, url FROM source WHERE id IN (SELECT sourceid FROM chat_source WHERE chatid = %v AND isactive = %v);", chatID, cs.IsActive)
+		query = fmt.Sprintf("SELECT title, id FROM source WHERE id IN (SELECT sourceid FROM chat_source WHERE chatid = %v AND isactive = %v);", chatID, cs.IsActive)
 	} else {
-		query = fmt.Sprintf("SELECT title, url FROM source WHERE id IN (SELECT sourceid FROM chat_source WHERE chatid = %v);", chatID)
+		query = fmt.Sprintf("SELECT title, id FROM source WHERE id IN (SELECT sourceid FROM chat_source WHERE chatid = %v);", chatID)
 	}
 	rows, err := db.pool.Query(ctx, query)
 	if err != nil {
@@ -130,18 +135,18 @@ func (db *Database) GetChatSourceTitleURL(ctx context.Context, chatID int64, cs 
 	}
 	defer rows.Close()
 
-	// TODO refactor []string{title, url} to a struct
-	var sourceTitleURL [][]string
+	// TODO refactor []string{title, id} to a struct
+	var sourceTitleID [][]string
 	for rows.Next() {
-		var sourceTitle, sourceURL string
-		err = rows.Scan(&sourceTitle, &sourceURL)
+		var sourceTitle, sourceID string
+		err = rows.Scan(&sourceTitle, &sourceID)
 		if err != nil {
 			return nil, err
 		}
-		sourceTitleURL = append(sourceTitleURL, []string{sourceTitle, sourceURL})
+		sourceTitleID = append(sourceTitleID, []string{sourceTitle, sourceID})
 	}
 
-	return sourceTitleURL, nil
+	return sourceTitleID, nil
 }
 
 // GetSourceURLs returns urls of all sources
@@ -215,7 +220,7 @@ func (db *Database) GetSourceURLChat(ctx context.Context) (map[string][]int64, e
 //	return posts, nil
 //}
 
-// AlterChatSource activates the source associated it with the user
+// AlterChatSource alters the source associated it with the chat by source url
 func (db *Database) AlterChatSource(ctx context.Context, chatID int64, url string, cs model.ChatSource) error {
 	query := fmt.Sprintf("SELECT id FROM source WHERE url = '%v' LIMIT 1;", url)
 	var sourceID int64
@@ -224,8 +229,13 @@ func (db *Database) AlterChatSource(ctx context.Context, chatID int64, url strin
 		return err
 	}
 
-	query = fmt.Sprintf("UPDATE chat_source SET isactive = %v WHERE chatid = %v AND sourceid = %v;", cs.IsActive, chatID, sourceID)
-	_, err = db.pool.Query(ctx, query)
+	return db.AlterChatSourceByID(ctx, chatID, sourceID, cs)
+}
+
+// AlterChatSourceByID alters the source associated it with the chat by source id
+func (db *Database) AlterChatSourceByID(ctx context.Context, chatID int64, sourceID int64, cs model.ChatSource) error {
+	query := fmt.Sprintf("UPDATE chat_source SET isactive = %v WHERE chatid = %v AND sourceid = %v;", cs.IsActive, chatID, sourceID)
+	_, err := db.pool.Query(ctx, query)
 	if err != nil {
 		return err
 	}
