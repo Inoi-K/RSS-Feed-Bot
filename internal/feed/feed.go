@@ -6,7 +6,7 @@ import (
 	"github.com/Inoi-K/RSS-Feed-Bot/configs/consts"
 	"github.com/Inoi-K/RSS-Feed-Bot/internal/database"
 	"github.com/Inoi-K/RSS-Feed-Bot/internal/model"
-	"github.com/Inoi-K/RSS-Feed-Bot/pkg/rss"
+	"github.com/Inoi-K/RSS-Feed-Bot/pkg/parser"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
 	"time"
@@ -85,7 +85,7 @@ func ProcessNewPosts(ctx context.Context, bot *tgbotapi.BotAPI) {
 
 	// TODO split urls in several goroutines for parallelism
 	for _, url := range urls {
-		source, err := rss.Parse(url)
+		source, err := parser.Parse(url)
 		if err != nil {
 			log.Printf("couldn't parse %v link: %v", url, err)
 		}

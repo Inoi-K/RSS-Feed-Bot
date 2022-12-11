@@ -7,7 +7,7 @@ import (
 	"github.com/Inoi-K/RSS-Feed-Bot/internal/database"
 	"github.com/Inoi-K/RSS-Feed-Bot/internal/feed"
 	"github.com/Inoi-K/RSS-Feed-Bot/internal/model"
-	"github.com/Inoi-K/RSS-Feed-Bot/pkg/rss"
+	"github.com/Inoi-K/RSS-Feed-Bot/pkg/parser"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"strings"
 )
@@ -89,7 +89,7 @@ func (c *Subscribe) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbot
 		//ans = fmt.Sprintf(consts.LocText[usr.LanguageCode][consts.SubscribeCommand], res.Title, url)
 
 		// LIB VALIDATION
-		source, err := rss.Parse(url)
+		source, err := parser.Parse(url)
 		if err != nil {
 			err = reply(bot, chat, ans)
 			if err != nil {
