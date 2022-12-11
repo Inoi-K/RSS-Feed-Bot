@@ -6,7 +6,7 @@ import (
 	"github.com/Inoi-K/RSS-Feed-Bot/configs/consts"
 	"github.com/Inoi-K/RSS-Feed-Bot/internal/database"
 	"github.com/Inoi-K/RSS-Feed-Bot/internal/feed"
-	"github.com/Inoi-K/RSS-Feed-Bot/internal/structs"
+	"github.com/Inoi-K/RSS-Feed-Bot/internal/model"
 	"github.com/Inoi-K/RSS-Feed-Bot/pkg/rss"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"strings"
@@ -89,7 +89,7 @@ func (c *Subscribe) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbot
 		//ans = fmt.Sprintf(consts.LocText[usr.LanguageCode][consts.SubscribeCommand], res.Title, url)
 
 		// LIB VALIDATION
-		title, err := rss.Parse(url)
+		source, err := rss.Parse(url)
 		if err != nil {
 			err = reply(bot, chat, ans)
 			if err != nil {
@@ -98,7 +98,7 @@ func (c *Subscribe) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbot
 			continue
 		}
 
-		err = db.AddSource(ctx, chat.ID, title, url)
+		err = db.AddSource(ctx, chat.ID, source.Title, url)
 		if err != nil {
 			err = reply(bot, chat, ans)
 			if err != nil {
@@ -106,7 +106,7 @@ func (c *Subscribe) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbot
 			}
 			continue
 		}
-		ans = fmt.Sprintf(consts.LocText[usr.LanguageCode][consts.SubscribeCommand], title, url)
+		ans = fmt.Sprintf(consts.LocText[usr.LanguageCode][consts.SubscribeCommand], source.Title, url)
 
 		err = reply(bot, chat, ans)
 		if err != nil {
@@ -173,7 +173,7 @@ func setIsActive(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update,
 	if len(args) > 0 {
 		urls := strings.Split(args, consts.ArgumentsSeparator)
 		for _, url := range urls {
-			err := db.AlterChatSource(ctx, chat.ID, url, structs.ChatSource{IsActive: isActive})
+			err := db.AlterChatSource(ctx, chat.ID, url, model.ChatSource{IsActive: isActive})
 			if err != nil {
 				return err
 			}
@@ -187,7 +187,7 @@ func setIsActive(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update,
 		}
 		infoText := fmt.Sprintf(consts.LocText[usr.LanguageCode][consts.ActivateCommand], state)
 
-		err := replyInlineChatSourceKeyboard(ctx, bot, upd, &structs.ChatSource{IsActive: !isActive}, infoText, state)
+		err := replyInlineChatSourceKeyboard(ctx, bot, upd, &model.ChatSource{IsActive: !isActive}, infoText, state)
 		if err != nil {
 			return err
 		}
@@ -198,7 +198,7 @@ func setIsActive(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update,
 
 // replyInlineChatSourceKeyboard gets title and url of the sources associated with the chat
 // and replies with inline buttons with commandButton as their beginning of the data
-func replyInlineChatSourceKeyboard(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, cs *structs.ChatSource, infoText string, commandButton string) error {
+func replyInlineChatSourceKeyboard(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, cs *model.ChatSource, infoText string, commandButton string) error {
 	chat := upd.FromChat()
 	db := database.GetDB()
 

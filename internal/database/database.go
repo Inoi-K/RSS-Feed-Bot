@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/Inoi-K/RSS-Feed-Bot/configs/consts"
 	"github.com/Inoi-K/RSS-Feed-Bot/configs/flags"
-	"github.com/Inoi-K/RSS-Feed-Bot/internal/structs"
+	"github.com/Inoi-K/RSS-Feed-Bot/internal/model"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -117,7 +117,7 @@ func (db *Database) RemoveSource(ctx context.Context, chatID int64, url string) 
 }
 
 // GetChatSourceTitleURL gets title and url of the all sources associated with the chat according to chat_source properties
-func (db *Database) GetChatSourceTitleURL(ctx context.Context, chatID int64, cs *structs.ChatSource) ([][]string, error) {
+func (db *Database) GetChatSourceTitleURL(ctx context.Context, chatID int64, cs *model.ChatSource) ([][]string, error) {
 	var query string
 	if cs != nil {
 		query = fmt.Sprintf("SELECT title, url FROM source WHERE id IN (SELECT sourceid FROM chat_source WHERE chatid = %v AND isactive = %v);", chatID, cs.IsActive)
@@ -144,30 +144,79 @@ func (db *Database) GetChatSourceTitleURL(ctx context.Context, chatID int64, cs 
 	return sourceTitleURL, nil
 }
 
-// GetNewPosts returns slice of the posts with id greater than the most recent post id
-func (db *Database) GetNewPosts(ctx context.Context, lastPostID int64) ([]structs.Post, error) {
-	query := fmt.Sprintf("SELECT * FROM post WHERE id > %v;", lastPostID)
+// GetSourceURLs returns urls of all sources
+func (db *Database) GetSourceURLs(ctx context.Context) ([]string, error) {
+	query := fmt.Sprintf("SELECT url FROM source;")
 	rows, err := db.pool.Query(ctx, query)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var posts []structs.Post
+	var urls []string
 	for rows.Next() {
-		var post structs.Post
-		err = rows.Scan(&post.ID, &post.SourceID, &post.Title, &post.URL, &post.ChatID)
+		var url string
+		err = rows.Scan(&url)
 		if err != nil {
 			return nil, err
 		}
-		posts = append(posts, post)
+		urls = append(urls, url)
 	}
 
-	return posts, nil
+	return urls, nil
 }
 
+// GetSourceURLChat returns map of source urls with a slice of associated chat ids
+func (db *Database) GetSourceURLChat(ctx context.Context) (map[string][]int64, error) {
+	query := fmt.Sprintf("SELECT (SELECT url FROM source WHERE id=sourceid), chatid FROM chat_source WHERE isactive=true;")
+	rows, err := db.pool.Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	URLChat := make(map[string][]int64)
+	for rows.Next() {
+		var url string
+		var chatID int64
+		err = rows.Scan(&url, &chatID)
+		if err != nil {
+			return nil, err
+		}
+
+		if _, ok := URLChat[url]; !ok {
+			URLChat[url] = []int64{}
+		}
+		URLChat[url] = append(URLChat[url], chatID)
+	}
+
+	return URLChat, nil
+}
+
+// GetNewPosts returns slice of the posts with id greater than the most recent post id
+//func (db *Database) GetNewPosts(ctx context.Context, lastPostID int64) ([]model.Post, error) {
+//	query := fmt.Sprintf("SELECT * FROM post WHERE id > %v;", lastPostID)
+//	rows, err := db.pool.Query(ctx, query)
+//	if err != nil {
+//		return nil, err
+//	}
+//	defer rows.Close()
+//
+//	var posts []model.Post
+//	for rows.Next() {
+//		var post model.Post
+//		err = rows.Scan(&post.ID, &post.SourceID, &post.Title, &post.URL, &post.ChatID)
+//		if err != nil {
+//			return nil, err
+//		}
+//		posts = append(posts, post)
+//	}
+//
+//	return posts, nil
+//}
+
 // AlterChatSource activates the source associated it with the user
-func (db *Database) AlterChatSource(ctx context.Context, chatID int64, url string, cs structs.ChatSource) error {
+func (db *Database) AlterChatSource(ctx context.Context, chatID int64, url string, cs model.ChatSource) error {
 	query := fmt.Sprintf("SELECT id FROM source WHERE url = '%v' LIMIT 1;", url)
 	var sourceID int64
 	err := db.pool.QueryRow(ctx, query).Scan(&sourceID)

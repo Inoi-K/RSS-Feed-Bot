@@ -6,6 +6,7 @@ import (
 	"github.com/Inoi-K/RSS-Feed-Bot/configs/flags"
 	"github.com/Inoi-K/RSS-Feed-Bot/internal/command"
 	"github.com/Inoi-K/RSS-Feed-Bot/internal/database"
+	"github.com/Inoi-K/RSS-Feed-Bot/internal/feed"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
 )
@@ -34,6 +35,7 @@ func main() {
 	// Create a new database connection
 	db, err = database.ConnectDB(ctx)
 
+	// Generate structs for commands
 	commands = makeCommands()
 
 	// Set update rate
@@ -45,6 +47,9 @@ func main() {
 
 	// Pass cancellable context to goroutine
 	go receiveUpdates(ctx, updates)
+
+	// Begin feed updating
+	feed.Begin(ctx, bot)
 
 	// Tell the user the bot is online
 	log.Println("Start listening for updates...")
@@ -68,8 +73,8 @@ func makeCommands() map[string]command.ICommand {
 
 		consts.NavigationButton: &command.NavigationButton{},
 
-		"tick": &command.Ticker{},
-		"stop": &command.StopTicker{},
+		//"tick": &command.Ticker{},
+		//"cancel": &command.StopTicker{},
 
 		consts.UpdateCommand: &command.Update{},
 

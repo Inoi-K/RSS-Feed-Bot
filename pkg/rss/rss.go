@@ -4,11 +4,12 @@ import (
 	"github.com/mmcdole/gofeed"
 )
 
-func Parse(URL string) (string, error) {
+// Parse checks the url and replies with its content
+func Parse(URL string) (*gofeed.Feed, error) {
 	fp := gofeed.NewParser()
 	feed, err := fp.ParseURL(URL)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return feed.Title, nil
+	return feed, nil
 }

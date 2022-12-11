@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/Inoi-K/RSS-Feed-Bot/configs/consts"
 	"github.com/Inoi-K/RSS-Feed-Bot/internal/database"
-	"github.com/Inoi-K/RSS-Feed-Bot/internal/structs"
+	"github.com/Inoi-K/RSS-Feed-Bot/internal/model"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"strings"
 )
@@ -75,7 +75,7 @@ func setIsActiveButton(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.U
 	chat := upd.FromChat()
 	db := database.GetDB()
 
-	err := db.AlterChatSource(ctx, chat.ID, args, structs.ChatSource{IsActive: isActive})
+	err := db.AlterChatSource(ctx, chat.ID, args, model.ChatSource{IsActive: isActive})
 	if err != nil {
 		return err
 	}
