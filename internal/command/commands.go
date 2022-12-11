@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/Inoi-K/RSS-Feed-Bot/configs/consts"
-	"github.com/Inoi-K/RSS-Feed-Bot/internal/client"
 	"github.com/Inoi-K/RSS-Feed-Bot/internal/database"
 	"github.com/Inoi-K/RSS-Feed-Bot/internal/feed"
 	"github.com/Inoi-K/RSS-Feed-Bot/internal/structs"
+	"github.com/Inoi-K/RSS-Feed-Bot/pkg/rss"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"strings"
 )
@@ -62,43 +62,52 @@ func (c *Subscribe) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbot
 
 	urls := strings.Split(args, consts.ArgumentsSeparator)
 	for _, url := range urls {
-		// VALIDATION
-		res, err := client.Validate(url)
-		if err != nil {
-			ans := fmt.Sprintf(consts.LocText[usr.LanguageCode][consts.SubscribeCommandFail], err)
-			err = reply(bot, chat, ans)
-			if err != nil {
-				return err
-			}
-			continue
-		}
+		ans := fmt.Sprintf(consts.LocText[usr.LanguageCode][consts.SubscribeCommandFail], consts.LocText[usr.LanguageCode][consts.NotValidLink])
 
-		if res.Valid {
-			err := db.AddSource(ctx, chat.ID, res.Title, url)
-			if err != nil {
-				return err
-			}
-		} else {
-			ans := fmt.Sprintf(consts.LocText[usr.LanguageCode][consts.SubscribeCommandFail], consts.LocText[usr.LanguageCode][consts.NotValidLink])
-			err = reply(bot, chat, ans)
-			if err != nil {
-				return err
-			}
-			continue
-		}
-
-		// NO VALIDATION
-		//err := db.AddSource(ctx, chat.ID, "testtitle", url)
+		// SERVICE VALIDATION
+		//res, err := client.Validate(url)
 		//if err != nil {
-		//	ans := fmt.Sprintf(consts.LocText[usr.LanguageCode][consts.SubscribeCommandFail], consts.LocText[usr.LanguageCode][consts.NotValidLink])
 		//	err = reply(bot, chat, ans)
 		//	if err != nil {
 		//		return err
 		//	}
 		//	continue
 		//}
+		//
+		//if res.Valid {
+		//	err := db.AddSource(ctx, chat.ID, res.Title, url)
+		//	if err != nil {
+		//		return err
+		//	}
+		//} else {
+		//	err = reply(bot, chat, ans)
+		//	if err != nil {
+		//		return err
+		//	}
+		//	continue
+		//}
+		//ans = fmt.Sprintf(consts.LocText[usr.LanguageCode][consts.SubscribeCommand], res.Title, url)
 
-		ans := fmt.Sprintf(consts.LocText[usr.LanguageCode][consts.SubscribeCommand], res.Title, url)
+		// LIB VALIDATION
+		title, err := rss.Parse(url)
+		if err != nil {
+			err = reply(bot, chat, ans)
+			if err != nil {
+				return err
+			}
+			continue
+		}
+
+		err = db.AddSource(ctx, chat.ID, title, url)
+		if err != nil {
+			err = reply(bot, chat, ans)
+			if err != nil {
+				return err
+			}
+			continue
+		}
+		ans = fmt.Sprintf(consts.LocText[usr.LanguageCode][consts.SubscribeCommand], title, url)
+
 		err = reply(bot, chat, ans)
 		if err != nil {
 			return err
