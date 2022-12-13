@@ -181,13 +181,12 @@ func setIsActive(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update,
 			}
 		}
 	} else {
-		var state string
-		if isActive {
-			state = consts.ActivateButton
-		} else {
+		state := consts.ActivateButton
+		infoText := fmt.Sprintf(consts.LocText[usr.LanguageCode][consts.ActivateCommand])
+		if !isActive {
 			state = consts.DeactivateButton
+			infoText = fmt.Sprintf(consts.LocText[usr.LanguageCode][consts.DeactivateCommand])
 		}
-		infoText := fmt.Sprintf(consts.LocText[usr.LanguageCode][consts.ActivateCommand], state)
 
 		err := replyInlineChatSourceKeyboard(ctx, bot, upd, &model.ChatSource{IsActive: !isActive}, infoText, state)
 		if err != nil {
