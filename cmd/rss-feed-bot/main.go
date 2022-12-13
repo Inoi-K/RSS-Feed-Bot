@@ -34,6 +34,9 @@ func main() {
 
 	// Create a new database connection
 	db, err = database.ConnectDB(ctx)
+	if err != nil {
+		log.Fatalf("couldn't connect to DB: %v", err)
+	}
 
 	// Generate structs for commands
 	commands = makeCommands()
@@ -64,7 +67,7 @@ func main() {
 // makeCommands creates all bot commands and buttons
 func makeCommands() map[string]command.ICommand {
 	return map[string]command.ICommand{
-		consts.MenuCommand:  &command.Menu{},
+		//consts.MenuCommand:  &command.Menu{},
 		consts.StartCommand: &command.Start{},
 
 		consts.SubscribeCommand:   &command.Subscribe{},
