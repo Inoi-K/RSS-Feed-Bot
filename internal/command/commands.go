@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/Inoi-K/RSS-Feed-Bot/configs/consts"
-	"github.com/Inoi-K/RSS-Feed-Bot/internal/database"
+	db "github.com/Inoi-K/RSS-Feed-Bot/internal/database"
 	"github.com/Inoi-K/RSS-Feed-Bot/internal/feed"
 	"github.com/Inoi-K/RSS-Feed-Bot/internal/model"
 	"github.com/Inoi-K/RSS-Feed-Bot/pkg/parser"
@@ -42,7 +42,6 @@ func (c *Start) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.
 	chat := upd.FromChat()
 	usr := upd.SentFrom()
 
-	db := database.GetDB()
 	err := db.AddChat(ctx, chat.ID, usr.LanguageCode)
 	if err != nil {
 		return err
@@ -58,7 +57,6 @@ type Subscribe struct{}
 func (c *Subscribe) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
 	chat := upd.FromChat()
 	usr := upd.SentFrom()
-	db := database.GetDB()
 
 	urls := strings.Split(args, consts.ArgumentsSeparator)
 	for _, url := range urls {
@@ -124,7 +122,6 @@ type Unsubscribe struct{}
 func (c *Unsubscribe) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
 	chat := upd.FromChat()
 	usr := upd.SentFrom()
-	db := database.GetDB()
 
 	// Remove urls if args are specified
 	// Otherwise display inline buttons with sources
@@ -168,7 +165,6 @@ func (c *Deactivate) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbo
 func setIsActive(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string, isActive bool) error {
 	chat := upd.FromChat()
 	usr := upd.SentFrom()
-	db := database.GetDB()
 
 	// Alter sources if args are specified
 	// Otherwise display inline buttons with sources
@@ -201,7 +197,6 @@ func setIsActive(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update,
 // and replies with inline buttons with commandButton as their beginning of the data
 func replyInlineChatSourceKeyboard(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, cs *model.ChatSource, infoText string, commandButton string) error {
 	chat := upd.FromChat()
-	db := database.GetDB()
 
 	msg := tgbotapi.NewMessage(upd.Message.Chat.ID, infoText)
 	msg.ParseMode = consts.ParseMode
@@ -272,7 +267,6 @@ type List struct{}
 func (c *List) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
 	chat := upd.FromChat()
 	usr := upd.SentFrom()
-	db := database.GetDB()
 
 	sourcesTitleURL, err := db.GetChatSourceTitleID(ctx, chat.ID, nil)
 	if err != nil {

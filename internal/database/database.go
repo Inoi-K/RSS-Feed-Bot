@@ -37,13 +37,8 @@ func ConnectDB(ctx context.Context) (*Database, error) {
 	return db, nil
 }
 
-// GetDB returns database
-func GetDB() *Database {
-	return db
-}
-
 // AddChat creates a record of chat in database
-func (db *Database) AddChat(ctx context.Context, chatID int64, lang string) error {
+func AddChat(ctx context.Context, chatID int64, lang string) error {
 	if len(lang) > 2 {
 		return consts.LongLanguageError
 	}
@@ -70,7 +65,7 @@ func (db *Database) AddChat(ctx context.Context, chatID int64, lang string) erro
 // TODO insert multiple rows in one query
 
 // AddSource adds one source in database and associates it with the chat
-func (db *Database) AddSource(ctx context.Context, chatID int64, title string, url string) error {
+func AddSource(ctx context.Context, chatID int64, title string, url string) error {
 	query := fmt.Sprintf("INSERT INTO source (title, url) VALUES ('%v', '%v') RETURNING id;", title, url)
 	var sourceID int64
 	err := db.pool.QueryRow(ctx, query).Scan(&sourceID)
@@ -99,7 +94,7 @@ func (db *Database) AddSource(ctx context.Context, chatID int64, title string, u
 }
 
 // RemoveSource removes source chat-source connection by source url
-func (db *Database) RemoveSource(ctx context.Context, chatID int64, url string) error {
+func RemoveSource(ctx context.Context, chatID int64, url string) error {
 	query := fmt.Sprintf("SELECT id FROM source WHERE url = '%v' LIMIT 1;", url)
 	var sourceID int64
 	err := db.pool.QueryRow(ctx, query).Scan(&sourceID)
@@ -107,11 +102,11 @@ func (db *Database) RemoveSource(ctx context.Context, chatID int64, url string) 
 		return err
 	}
 
-	return db.RemoveSourceByID(ctx, chatID, sourceID)
+	return RemoveSourceByID(ctx, chatID, sourceID)
 }
 
 // RemoveSourceByID removes source chat-source connection by source id
-func (db *Database) RemoveSourceByID(ctx context.Context, chatID int64, sourceID int64) error {
+func RemoveSourceByID(ctx context.Context, chatID int64, sourceID int64) error {
 	query := fmt.Sprintf("DELETE FROM chat_source WHERE chatid = %v AND sourceid = %v;", chatID, sourceID)
 	_, err := db.pool.Query(ctx, query)
 	if err != nil {
@@ -122,7 +117,7 @@ func (db *Database) RemoveSourceByID(ctx context.Context, chatID int64, sourceID
 }
 
 // GetChatSourceTitleID gets title and url of the all sources associated with the chat according to chat_source properties
-func (db *Database) GetChatSourceTitleID(ctx context.Context, chatID int64, cs *model.ChatSource) ([][]string, error) {
+func GetChatSourceTitleID(ctx context.Context, chatID int64, cs *model.ChatSource) ([][]string, error) {
 	var query string
 	if cs != nil {
 		query = fmt.Sprintf("SELECT title, id FROM source WHERE id IN (SELECT sourceid FROM chat_source WHERE chatid = %v AND isactive = %v);", chatID, cs.IsActive)
@@ -150,7 +145,7 @@ func (db *Database) GetChatSourceTitleID(ctx context.Context, chatID int64, cs *
 }
 
 // GetSourceURLs returns urls of all sources
-func (db *Database) GetSourceURLs(ctx context.Context) ([]string, error) {
+func GetSourceURLs(ctx context.Context) ([]string, error) {
 	query := fmt.Sprintf("SELECT url FROM source;")
 	rows, err := db.pool.Query(ctx, query)
 	if err != nil {
@@ -172,7 +167,7 @@ func (db *Database) GetSourceURLs(ctx context.Context) ([]string, error) {
 }
 
 // GetSourceURLChat returns map of source urls with a slice of associated chat ids
-func (db *Database) GetSourceURLChat(ctx context.Context) (map[string][]int64, error) {
+func GetSourceURLChat(ctx context.Context) (map[string][]int64, error) {
 	query := fmt.Sprintf("SELECT (SELECT url FROM source WHERE id=sourceid), chatid FROM chat_source WHERE isactive=true;")
 	rows, err := db.pool.Query(ctx, query)
 	if err != nil {
@@ -199,7 +194,7 @@ func (db *Database) GetSourceURLChat(ctx context.Context) (map[string][]int64, e
 }
 
 // GetNewPosts returns slice of the posts with id greater than the most recent post id
-//func (db *Database) GetNewPosts(ctx context.Context, lastPostID int64) ([]model.Post, error) {
+//func GetNewPosts(ctx context.Context, lastPostID int64) ([]model.Post, error) {
 //	query := fmt.Sprintf("SELECT * FROM post WHERE id > %v;", lastPostID)
 //	rows, err := db.pool.Query(ctx, query)
 //	if err != nil {
@@ -221,7 +216,7 @@ func (db *Database) GetSourceURLChat(ctx context.Context) (map[string][]int64, e
 //}
 
 // AlterChatSource alters the source associated it with the chat by source url
-func (db *Database) AlterChatSource(ctx context.Context, chatID int64, url string, cs model.ChatSource) error {
+func AlterChatSource(ctx context.Context, chatID int64, url string, cs model.ChatSource) error {
 	query := fmt.Sprintf("SELECT id FROM source WHERE url = '%v' LIMIT 1;", url)
 	var sourceID int64
 	err := db.pool.QueryRow(ctx, query).Scan(&sourceID)
@@ -229,11 +224,11 @@ func (db *Database) AlterChatSource(ctx context.Context, chatID int64, url strin
 		return err
 	}
 
-	return db.AlterChatSourceByID(ctx, chatID, sourceID, cs)
+	return AlterChatSourceByID(ctx, chatID, sourceID, cs)
 }
 
 // AlterChatSourceByID alters the source associated it with the chat by source id
-func (db *Database) AlterChatSourceByID(ctx context.Context, chatID int64, sourceID int64, cs model.ChatSource) error {
+func AlterChatSourceByID(ctx context.Context, chatID int64, sourceID int64, cs model.ChatSource) error {
 	query := fmt.Sprintf("UPDATE chat_source SET isactive = %v WHERE chatid = %v AND sourceid = %v;", cs.IsActive, chatID, sourceID)
 	_, err := db.pool.Query(ctx, query)
 	if err != nil {

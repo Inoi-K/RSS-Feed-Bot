@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/Inoi-K/RSS-Feed-Bot/configs/consts"
-	"github.com/Inoi-K/RSS-Feed-Bot/internal/database"
+	db "github.com/Inoi-K/RSS-Feed-Bot/internal/database"
 	"github.com/Inoi-K/RSS-Feed-Bot/internal/model"
 	"github.com/Inoi-K/RSS-Feed-Bot/pkg/parser"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -71,7 +71,6 @@ func tick(bot *tgbotapi.BotAPI, chatID int64) {
 
 // ProcessNewPosts handles getting and replying new posts
 func ProcessNewPosts(ctx context.Context, bot *tgbotapi.BotAPI) {
-	db := database.GetDB()
 	beginTime := time.Now()
 
 	urls, err := db.GetSourceURLs(ctx)

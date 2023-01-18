@@ -3,7 +3,7 @@ package command
 import (
 	"context"
 	"github.com/Inoi-K/RSS-Feed-Bot/configs/consts"
-	"github.com/Inoi-K/RSS-Feed-Bot/internal/database"
+	db "github.com/Inoi-K/RSS-Feed-Bot/internal/database"
 	"github.com/Inoi-K/RSS-Feed-Bot/internal/model"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"strconv"
@@ -15,7 +15,6 @@ type UnsubscribeButton struct{}
 
 func (c *UnsubscribeButton) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
 	chat := upd.FromChat()
-	db := database.GetDB()
 
 	sourceID, err := strconv.Atoi(args)
 	if err != nil {
@@ -78,7 +77,6 @@ func (c *DeactivateButton) Execute(ctx context.Context, bot *tgbotapi.BotAPI, up
 // and edits the keyboard from which the callback was sent
 func setIsActiveButton(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string, isActive bool) error {
 	chat := upd.FromChat()
-	db := database.GetDB()
 
 	sourceID, err := strconv.Atoi(args)
 	if err != nil {
