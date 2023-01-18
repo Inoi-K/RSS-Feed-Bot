@@ -22,7 +22,6 @@ func main() {
 	// Connect to the bot
 	bot, err = tgbotapi.NewBotAPI(*flags.Token)
 	if err != nil {
-		// Abort if something is wrong
 		log.Panic(err)
 	}
 	// Set this to true to log all interactions with telegram servers
@@ -44,10 +43,8 @@ func main() {
 	// Set update rate
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
-
 	// `updates` is a golang channel which receives telegram updates
 	updates := bot.GetUpdatesChan(u)
-
 	// Pass cancellable context to goroutine
 	go receiveUpdates(ctx, updates)
 
