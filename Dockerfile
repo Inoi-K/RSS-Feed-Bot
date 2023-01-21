@@ -12,5 +12,6 @@ FROM alpine
 WORKDIR /app
 
 COPY --from=build /app/bin/rss-feed-bot .
+COPY configs/localization/dictionaries /app/configs/localization/dictionaries
 
 ENTRYPOINT ["/app/rss-feed-bot"]
