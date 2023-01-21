@@ -3,6 +3,7 @@ package command
 import (
 	"context"
 	"github.com/Inoi-K/RSS-Feed-Bot/configs/consts"
+	loc "github.com/Inoi-K/RSS-Feed-Bot/configs/localization"
 	db "github.com/Inoi-K/RSS-Feed-Bot/internal/database"
 	"github.com/Inoi-K/RSS-Feed-Bot/internal/model"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -108,4 +109,17 @@ func editInlineChatSourceKeyboard(bot *tgbotapi.BotAPI, upd tgbotapi.Update, arg
 	msg := tgbotapi.NewEditMessageReplyMarkup(message.Chat.ID, message.MessageID, newMarkup)
 	_, err := bot.Send(msg)
 	return err
+}
+
+type LanguageButton struct{}
+
+func (c *LanguageButton) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
+	chat := upd.FromChat()
+
+	result := loc.Message(loc.LangFail) // fail in current language
+	if loc.ChangeLanguage(args) {
+		result = loc.Message(loc.LangSuccess) // success in new language
+	}
+
+	return reply(bot, chat, result)
 }

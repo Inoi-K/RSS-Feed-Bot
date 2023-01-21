@@ -12,4 +12,7 @@ const (
 	Sub          = "sub"
 	SubFail      = "subFail"
 	NotValidLink = "notValidLink"
+	Lang         = "lang"
+	LangSuccess  = "langSuccess"
+	LangFail     = "langFail"
 )

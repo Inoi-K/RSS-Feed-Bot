@@ -9,5 +9,8 @@
   "unsubSuccess": "*Successfully unsubscribed*\n[source](%v)",
   "sub": "*Successfully subscribed*\n[%v](%v)",
   "subFail": "*Failed to subscribe*\n%v",
-  "notValidLink": "The link is not valid"
+  "notValidLink": "The link is not valid",
+  "lang": "Available languages:",
+  "langSuccess": "The language successfully changed!",
+  "langFail": "The chosen language is not supported yet"
 }

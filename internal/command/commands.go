@@ -256,3 +256,11 @@ func (c *Help) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.U
 
 	return reply(bot, chat, loc.Message(loc.Help))
 }
+
+type Language struct{}
+
+func (c *Language) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
+	chat := upd.FromChat()
+
+	return replyKeyboard(bot, chat, loc.Message(loc.Lang), makeInlineKeyboard(loc.SupportedLanguages, consts.LanguageButton))
+}

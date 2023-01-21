@@ -10,12 +10,13 @@ const (
 	DeactivateCommand  = "deact"
 	ListCommand        = "list"
 	HelpCommand        = "help"
+	LanguageCommand    = "lang"
 
 	// CALLBACKS
-
 	NavigationButton  = "navigation"
 	TutorialButton    = "tutorial"
 	UnsubscribeButton = "unsubscribe"
 	ActivateButton    = "activate"
 	DeactivateButton  = "deactivate"
+	LanguageButton    = "language"
 )
