@@ -172,10 +172,10 @@ func setIsActive(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update,
 		}
 	} else {
 		state := consts.ActivateButton
-		infoText := fmt.Sprintf(loc.Message(loc.Activate))
+		infoText := loc.Message(loc.Activate)
 		if !isActive {
 			state = consts.DeactivateButton
-			infoText = fmt.Sprintf(loc.Message(loc.Deactivate))
+			infoText = loc.Message(loc.Deactivate)
 		}
 
 		err := replyInlineChatSourceKeyboard(ctx, bot, upd, &model.ChatSource{IsActive: !isActive}, infoText, state)

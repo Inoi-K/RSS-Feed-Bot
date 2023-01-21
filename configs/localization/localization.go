@@ -33,6 +33,7 @@ func init() {
 	localizer = i18n.NewLocalizer(bundle, language.English.String())
 }
 
+// ChangeLanguage changes the app language to a new one and returns true if it is supported, otherwise returns false
 func ChangeLanguage(newLang string) bool {
 	for _, lang := range SupportedLanguages {
 		if newLang == lang.Data {
@@ -43,6 +44,7 @@ func ChangeLanguage(newLang string) bool {
 	return false
 }
 
+// Message handles config by id and returns localized message
 func Message(id string) string {
 	return localizer.MustLocalize(&i18n.LocalizeConfig{
 		MessageID: id,
