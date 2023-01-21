@@ -117,7 +117,7 @@ func RemoveSourceByID(ctx context.Context, chatID int64, sourceID int64) error {
 }
 
 // GetChatSourceTitleID gets title and url of the all sources associated with the chat according to chat_source properties
-func GetChatSourceTitleID(ctx context.Context, chatID int64, cs *model.ChatSource) ([][]string, error) {
+func GetChatSourceTitleID(ctx context.Context, chatID int64, cs *model.ChatSource) ([]model.Content, error) {
 	var query string
 	if cs != nil {
 		query = fmt.Sprintf("SELECT title, id FROM source WHERE id IN (SELECT sourceid FROM chat_source WHERE chatid = %v AND isactive = %v);", chatID, cs.IsActive)
@@ -130,15 +130,17 @@ func GetChatSourceTitleID(ctx context.Context, chatID int64, cs *model.ChatSourc
 	}
 	defer rows.Close()
 
-	// TODO refactor []string{title, id} to a struct
-	var sourceTitleID [][]string
+	var sourceTitleID []model.Content
 	for rows.Next() {
 		var sourceTitle, sourceID string
 		err = rows.Scan(&sourceTitle, &sourceID)
 		if err != nil {
 			return nil, err
 		}
-		sourceTitleID = append(sourceTitleID, []string{sourceTitle, sourceID})
+		sourceTitleID = append(sourceTitleID, model.Content{
+			Text: sourceTitle,
+			Data: sourceID,
+		})
 	}
 
 	return sourceTitleID, nil

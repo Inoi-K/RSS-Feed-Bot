@@ -13,13 +13,6 @@ import (
 	"strings"
 )
 
-func reply(bot *tgbotapi.BotAPI, chat *tgbotapi.Chat, text string) error {
-	msg := tgbotapi.NewMessage(chat.ID, text)
-	msg.ParseMode = consts.ParseMode
-	_, err := bot.Send(msg)
-	return err
-}
-
 // ICommand provides an interface for all commands and buttons callbacks
 type ICommand interface {
 	Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error
@@ -29,11 +22,8 @@ type ICommand interface {
 type Menu struct{}
 
 func (c *Menu) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
-	msg := tgbotapi.NewMessage(upd.Message.Chat.ID, consts.FirstMenu)
-	msg.ParseMode = consts.ParseMode
-	msg.ReplyMarkup = consts.FirstMenuMarkup
-	_, err := bot.Send(msg)
-	return err
+	chat := upd.FromChat()
+	return replyKeyboard(bot, chat, consts.FirstMenu, consts.FirstMenuMarkup)
 }
 
 // Start command begins an interaction with the chat and creates the record in database
@@ -202,29 +192,12 @@ func setIsActive(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update,
 func replyInlineChatSourceKeyboard(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, cs *model.ChatSource, infoText string, commandButton string) error {
 	chat := upd.FromChat()
 
-	msg := tgbotapi.NewMessage(upd.Message.Chat.ID, infoText)
-	msg.ParseMode = consts.ParseMode
-
 	sourcesTitleURL, err := db.GetChatSourceTitleID(ctx, chat.ID, cs)
 	if err != nil {
 		return err
 	}
 
-	var keyboard [][]tgbotapi.InlineKeyboardButton
-	for _, sourceTitleURL := range sourcesTitleURL {
-		row := tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData(sourceTitleURL[0], strings.Join([]string{commandButton, sourceTitleURL[1]}, consts.ArgumentsSeparator)),
-		)
-		keyboard = append(keyboard, row)
-	}
-	msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(keyboard...)
-
-	_, err = bot.Send(msg)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return replyKeyboard(bot, chat, infoText, makeInlineKeyboard(sourcesTitleURL, commandButton))
 }
 
 // Ticker command starts a ticker
@@ -251,17 +224,9 @@ type Update struct{}
 func (c *Update) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
 	chat := upd.FromChat()
 
-	text := loc.Message(loc.Upd)
-	msg := tgbotapi.NewMessage(chat.ID, text)
-	msg.ReplyMarkup = consts.UpdateKeyboard
-	_, err := bot.Send(msg)
-	if err != nil {
-		return err
-	}
+	go feed.ProcessNewPosts(ctx, bot)
 
-	feed.ProcessNewPosts(ctx, bot)
-
-	return nil
+	return replyKeyboard(bot, chat, loc.Message(loc.Upd), consts.UpdateKeyboard)
 }
 
 // List command shows all current subscriptions of the chat
@@ -277,7 +242,7 @@ func (c *List) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.U
 
 	text := loc.Message(loc.List)
 	for _, sourceTitleURL := range sourcesTitleURL {
-		text += fmt.Sprintf("\n[%v](%v)", sourceTitleURL[0], sourceTitleURL[1])
+		text += fmt.Sprintf("\n[%v](%v)", sourceTitleURL.Text, sourceTitleURL.Data)
 	}
 
 	return reply(bot, chat, text)
