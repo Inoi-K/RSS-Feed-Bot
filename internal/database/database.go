@@ -148,7 +148,7 @@ func GetChatSourceTitleID(ctx context.Context, chatID int64, cs *model.ChatSourc
 
 // GetSourceURLs returns urls of all sources
 func GetSourceURLs(ctx context.Context) ([]string, error) {
-	query := fmt.Sprintf("SELECT url FROM source;")
+	query := "SELECT url FROM source;"
 	rows, err := db.pool.Query(ctx, query)
 	if err != nil {
 		return nil, err
@@ -170,7 +170,7 @@ func GetSourceURLs(ctx context.Context) ([]string, error) {
 
 // GetSourceURLChat returns map of source urls with a slice of associated chat ids
 func GetSourceURLChat(ctx context.Context) (map[string][]int64, error) {
-	query := fmt.Sprintf("SELECT (SELECT url FROM source WHERE id=sourceid), chatid FROM chat_source WHERE isactive=true;")
+	query := "SELECT (SELECT url FROM source WHERE id=sourceid), chatid FROM chat_source WHERE isactive=true;"
 	rows, err := db.pool.Query(ctx, query)
 	if err != nil {
 		return nil, err
