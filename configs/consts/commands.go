@@ -11,6 +11,7 @@ const (
 	ListCommand        = "list"
 	HelpCommand        = "help"
 	LanguageCommand    = "lang"
+	PingCommand        = "ping"
 
 	// CALLBACKS
 	NavigationButton  = "navigation"

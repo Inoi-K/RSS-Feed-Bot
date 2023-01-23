@@ -265,3 +265,10 @@ func (c *Language) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbota
 
 	return builder.ReplyKeyboard(bot, chat, loc.Message(loc.Lang), builder.MakeInlineKeyboard(loc.SupportedLanguages, consts.LanguageButton))
 }
+
+type Ping struct{}
+
+func (c *Ping) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
+	chat := upd.FromChat()
+	return builder.Reply(bot, chat, loc.Message(loc.Pong))
+}

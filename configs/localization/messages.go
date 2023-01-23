@@ -15,4 +15,5 @@ const (
 	Lang         = "lang"
 	LangSuccess  = "langSuccess"
 	LangFail     = "langFail"
+	Pong         = "pong"
 )

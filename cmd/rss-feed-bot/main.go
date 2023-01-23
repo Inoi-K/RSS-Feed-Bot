@@ -88,5 +88,7 @@ func makeCommands() map[string]command.ICommand {
 
 		consts.LanguageCommand: &command.Language{},
 		consts.LanguageButton:  &command.LanguageButton{},
+
+		consts.PingCommand: &command.Ping{},
 	}
 }

@@ -12,5 +12,6 @@
   "notValidLink": "The link is not valid",
   "lang": "Available languages:",
   "langSuccess": "The language successfully changed!",
-  "langFail": "The chosen language is not supported yet"
+  "langFail": "The chosen language is not supported yet",
+  "pong": "pong!"
 }
