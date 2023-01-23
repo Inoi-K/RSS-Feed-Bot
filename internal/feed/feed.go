@@ -3,7 +3,7 @@ package feed
 import (
 	"context"
 	"fmt"
-	"github.com/Inoi-K/RSS-Feed-Bot/configs/consts"
+	"github.com/Inoi-K/RSS-Feed-Bot/configs/flags"
 	db "github.com/Inoi-K/RSS-Feed-Bot/internal/database"
 	"github.com/Inoi-K/RSS-Feed-Bot/internal/model"
 	"github.com/Inoi-K/RSS-Feed-Bot/pkg/parser"
@@ -22,7 +22,7 @@ var (
 
 // Begin initializes the ticker
 func Begin(ctx context.Context, bot *tgbotapi.BotAPI) {
-	ticker := time.NewTicker(consts.FeedUpdateIntervalSeconds * time.Second)
+	ticker := time.NewTicker(*flags.FeedUpdateInterval)
 	lastUpdateTime = time.Now()
 
 	go func() {
