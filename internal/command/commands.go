@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/Inoi-K/RSS-Feed-Bot/configs/consts"
 	loc "github.com/Inoi-K/RSS-Feed-Bot/configs/localization"
+	"github.com/Inoi-K/RSS-Feed-Bot/internal/builder"
 	db "github.com/Inoi-K/RSS-Feed-Bot/internal/database"
 	"github.com/Inoi-K/RSS-Feed-Bot/internal/feed"
 	"github.com/Inoi-K/RSS-Feed-Bot/internal/model"
@@ -23,7 +24,7 @@ type Menu struct{}
 
 func (c *Menu) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
 	chat := upd.FromChat()
-	return replyKeyboard(bot, chat, consts.FirstMenu, consts.FirstMenuMarkup)
+	return builder.ReplyKeyboard(bot, chat, consts.FirstMenu, consts.FirstMenuMarkup)
 }
 
 // Start command begins an interaction with the chat and creates the record in database
@@ -44,8 +45,8 @@ func (c *Start) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.
 		loc.ChangeLanguage("en")
 	}
 
-	defer reply(bot, chat, loc.Message(loc.Help))
-	return reply(bot, chat, loc.Message(loc.Start))
+	defer builder.Reply(bot, chat, loc.Message(loc.Help))
+	return builder.Reply(bot, chat, loc.Message(loc.Start))
 }
 
 // Subscribe command adds sources to database and associates it with the chat
@@ -85,7 +86,7 @@ func (c *Subscribe) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbot
 		// LIB VALIDATION
 		source, err := parser.Parse(url)
 		if err != nil {
-			err = reply(bot, chat, ans)
+			err = builder.Reply(bot, chat, ans)
 			if err != nil {
 				return err
 			}
@@ -94,7 +95,7 @@ func (c *Subscribe) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbot
 
 		err = db.AddSource(ctx, chat.ID, source.Title, url)
 		if err != nil {
-			err = reply(bot, chat, ans)
+			err = builder.Reply(bot, chat, ans)
 			if err != nil {
 				return err
 			}
@@ -102,7 +103,7 @@ func (c *Subscribe) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbot
 		}
 		ans = fmt.Sprintf(loc.Message(loc.Sub), source.Title, url)
 
-		err = reply(bot, chat, ans)
+		err = builder.Reply(bot, chat, ans)
 		if err != nil {
 			return err
 		}
@@ -128,7 +129,7 @@ func (c *Unsubscribe) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgb
 				return err
 			}
 			ans := fmt.Sprintf(loc.Message(loc.UnsubSuccess), url)
-			err = reply(bot, chat, ans)
+			err = builder.Reply(bot, chat, ans)
 		}
 	} else {
 		infoText := loc.Message(loc.Unsub)
@@ -197,7 +198,7 @@ func replyInlineChatSourceKeyboard(ctx context.Context, bot *tgbotapi.BotAPI, up
 		return err
 	}
 
-	return replyKeyboard(bot, chat, infoText, makeInlineKeyboard(sourcesTitleURL, commandButton))
+	return builder.ReplyKeyboard(bot, chat, infoText, builder.MakeInlineKeyboard(sourcesTitleURL, commandButton))
 }
 
 // Ticker command starts a ticker
@@ -206,7 +207,7 @@ type Ticker struct{}
 func (c *Ticker) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
 	feed.Begin(ctx, bot)
 
-	return reply(bot, upd.FromChat(), "Ticker started")
+	return builder.Reply(bot, upd.FromChat(), "Ticker started")
 }
 
 // StopTicker command stops the ticker started in Ticker command
@@ -215,7 +216,7 @@ type StopTicker struct{}
 func (c *StopTicker) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
 	feed.End()
 
-	return reply(bot, upd.FromChat(), "Ticker stopped")
+	return builder.Reply(bot, upd.FromChat(), "Ticker stopped")
 }
 
 // Update command gets recent posts
@@ -226,7 +227,7 @@ func (c *Update) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi
 
 	go feed.ProcessNewPosts(ctx, bot)
 
-	return replyKeyboard(bot, chat, loc.Message(loc.Upd), consts.UpdateKeyboard)
+	return builder.ReplyKeyboard(bot, chat, loc.Message(loc.Upd), consts.UpdateKeyboard)
 }
 
 // List command shows all current subscriptions of the chat
@@ -245,7 +246,7 @@ func (c *List) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.U
 		text += fmt.Sprintf("\n[%v](%v)", sourceTitleURL.Text, sourceTitleURL.Data)
 	}
 
-	return reply(bot, chat, text)
+	return builder.Reply(bot, chat, text)
 }
 
 // Help command shows information about all commands
@@ -254,7 +255,7 @@ type Help struct{}
 func (c *Help) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
 	chat := upd.FromChat()
 
-	return reply(bot, chat, loc.Message(loc.Help))
+	return builder.Reply(bot, chat, loc.Message(loc.Help))
 }
 
 type Language struct{}
@@ -262,5 +263,5 @@ type Language struct{}
 func (c *Language) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
 	chat := upd.FromChat()
 
-	return replyKeyboard(bot, chat, loc.Message(loc.Lang), makeInlineKeyboard(loc.SupportedLanguages, consts.LanguageButton))
+	return builder.ReplyKeyboard(bot, chat, loc.Message(loc.Lang), builder.MakeInlineKeyboard(loc.SupportedLanguages, consts.LanguageButton))
 }

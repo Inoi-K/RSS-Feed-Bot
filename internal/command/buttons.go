@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/Inoi-K/RSS-Feed-Bot/configs/consts"
 	loc "github.com/Inoi-K/RSS-Feed-Bot/configs/localization"
+	"github.com/Inoi-K/RSS-Feed-Bot/internal/builder"
 	db "github.com/Inoi-K/RSS-Feed-Bot/internal/database"
 	"github.com/Inoi-K/RSS-Feed-Bot/internal/model"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -121,5 +122,5 @@ func (c *LanguageButton) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd 
 		result = loc.Message(loc.LangSuccess) // success in new language
 	}
 
-	return reply(bot, chat, result)
+	return builder.Reply(bot, chat, result)
 }

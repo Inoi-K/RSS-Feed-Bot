@@ -62,8 +62,6 @@ func AddChat(ctx context.Context, chatID int64, lang string) error {
 	return nil
 }
 
-// TODO insert multiple rows in one query
-
 // AddSource adds one source in database and associates it with the chat
 func AddSource(ctx context.Context, chatID int64, title string, url string) error {
 	query := fmt.Sprintf("INSERT INTO source (title, url) VALUES ('%v', '%v') RETURNING id;", title, url)
@@ -194,28 +192,6 @@ func GetSourceURLChat(ctx context.Context) (map[string][]int64, error) {
 
 	return URLChat, nil
 }
-
-// GetNewPosts returns slice of the posts with id greater than the most recent post id
-//func GetNewPosts(ctx context.Context, lastPostID int64) ([]model.Post, error) {
-//	query := fmt.Sprintf("SELECT * FROM post WHERE id > %v;", lastPostID)
-//	rows, err := db.pool.Query(ctx, query)
-//	if err != nil {
-//		return nil, err
-//	}
-//	defer rows.Close()
-//
-//	var posts []model.Post
-//	for rows.Next() {
-//		var post model.Post
-//		err = rows.Scan(&post.ID, &post.SourceID, &post.Title, &post.URL, &post.ChatID)
-//		if err != nil {
-//			return nil, err
-//		}
-//		posts = append(posts, post)
-//	}
-//
-//	return posts, nil
-//}
 
 // AlterChatSource alters the source associated it with the chat by source url
 func AlterChatSource(ctx context.Context, chatID int64, url string, cs model.ChatSource) error {

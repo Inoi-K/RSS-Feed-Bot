@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/Inoi-K/RSS-Feed-Bot/configs/flags"
+	"github.com/Inoi-K/RSS-Feed-Bot/internal/builder"
 	db "github.com/Inoi-K/RSS-Feed-Bot/internal/database"
 	"github.com/Inoi-K/RSS-Feed-Bot/internal/model"
 	"github.com/Inoi-K/RSS-Feed-Bot/pkg/parser"
@@ -16,7 +17,6 @@ var (
 	cancel   func()
 	canceled chan struct{}
 
-	lastPostID     int64
 	lastUpdateTime time.Time
 )
 
@@ -60,7 +60,7 @@ func End() {
 
 // tick replies with "tick"
 func tick(bot *tgbotapi.BotAPI, chatID int64) {
-	msg := tgbotapi.NewMessage(chatID, "tick")
+	msg := builder.NewMessage(chatID, "tick", nil)
 	_, err := bot.Send(msg)
 	if err != nil {
 		log.Printf("couldn't send tick: %v", err)
@@ -109,7 +109,7 @@ func ProcessNewPosts(ctx context.Context, bot *tgbotapi.BotAPI) {
 	sendMessage := func() {
 		for post := range posts {
 			text := fmt.Sprintf("%v\n\n%v", post.Title, post.URL)
-			msg := tgbotapi.NewMessage(post.ChatID, text)
+			msg := builder.NewMessage(post.ChatID, text, nil)
 			_, err := bot.Send(msg)
 			if err != nil {
 				log.Printf("couldn't send post in %v chat: %v", post.ChatID, err)
