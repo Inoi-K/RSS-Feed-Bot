@@ -3,7 +3,9 @@ package command
 import (
 	"context"
 	"github.com/Inoi-K/RSS-Feed-Bot/configs/consts"
-	"github.com/Inoi-K/RSS-Feed-Bot/internal/database"
+	loc "github.com/Inoi-K/RSS-Feed-Bot/configs/localization"
+	"github.com/Inoi-K/RSS-Feed-Bot/internal/builder"
+	db "github.com/Inoi-K/RSS-Feed-Bot/internal/database"
 	"github.com/Inoi-K/RSS-Feed-Bot/internal/model"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"strconv"
@@ -15,7 +17,6 @@ type UnsubscribeButton struct{}
 
 func (c *UnsubscribeButton) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
 	chat := upd.FromChat()
-	db := database.GetDB()
 
 	sourceID, err := strconv.Atoi(args)
 	if err != nil {
@@ -78,7 +79,6 @@ func (c *DeactivateButton) Execute(ctx context.Context, bot *tgbotapi.BotAPI, up
 // and edits the keyboard from which the callback was sent
 func setIsActiveButton(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string, isActive bool) error {
 	chat := upd.FromChat()
-	db := database.GetDB()
 
 	sourceID, err := strconv.Atoi(args)
 	if err != nil {
@@ -110,4 +110,17 @@ func editInlineChatSourceKeyboard(bot *tgbotapi.BotAPI, upd tgbotapi.Update, arg
 	msg := tgbotapi.NewEditMessageReplyMarkup(message.Chat.ID, message.MessageID, newMarkup)
 	_, err := bot.Send(msg)
 	return err
+}
+
+type LanguageButton struct{}
+
+func (c *LanguageButton) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
+	chat := upd.FromChat()
+
+	result := loc.Message(loc.LangFail) // fail in current language
+	if loc.ChangeLanguage(args) {
+		result = loc.Message(loc.LangSuccess) // success in new language
+	}
+
+	return builder.Reply(bot, chat, result)
 }

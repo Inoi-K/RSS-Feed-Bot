@@ -3,8 +3,9 @@ package feed
 import (
 	"context"
 	"fmt"
-	"github.com/Inoi-K/RSS-Feed-Bot/configs/consts"
-	"github.com/Inoi-K/RSS-Feed-Bot/internal/database"
+	"github.com/Inoi-K/RSS-Feed-Bot/configs/flags"
+	"github.com/Inoi-K/RSS-Feed-Bot/internal/builder"
+	db "github.com/Inoi-K/RSS-Feed-Bot/internal/database"
 	"github.com/Inoi-K/RSS-Feed-Bot/internal/model"
 	"github.com/Inoi-K/RSS-Feed-Bot/pkg/parser"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -16,13 +17,12 @@ var (
 	cancel   func()
 	canceled chan struct{}
 
-	lastPostID     int64
 	lastUpdateTime time.Time
 )
 
 // Begin initializes the ticker
 func Begin(ctx context.Context, bot *tgbotapi.BotAPI) {
-	ticker := time.NewTicker(consts.FeedUpdateIntervalSeconds * time.Second)
+	ticker := time.NewTicker(*flags.FeedUpdateInterval)
 	lastUpdateTime = time.Now()
 
 	go func() {
@@ -60,62 +60,80 @@ func End() {
 
 // tick replies with "tick"
 func tick(bot *tgbotapi.BotAPI, chatID int64) {
-	msg := tgbotapi.NewMessage(chatID, "tick")
+	msg := builder.NewMessage(chatID, "tick", nil)
 	_, err := bot.Send(msg)
 	if err != nil {
 		log.Printf("couldn't send tick: %v", err)
 	}
 }
 
-// TODO implement new posts on chans & goroutines usage
-
 // ProcessNewPosts handles getting and replying new posts
 func ProcessNewPosts(ctx context.Context, bot *tgbotapi.BotAPI) {
-	db := database.GetDB()
 	beginTime := time.Now()
 
-	urls, err := db.GetSourceURLs(ctx)
-	if err != nil {
-		log.Printf("couldn't get source urls: %v", err)
-	}
 	URLChat, err := db.GetSourceURLChat(ctx)
 	if err != nil {
 		log.Printf("couldn't get source urls of chats: %v", err)
 	}
 
-	// TODO split urls in several goroutines for parallelism
-	for _, url := range urls {
+	// chan for posts
+	posts := make(chan model.Post, 50)
+	done := make(chan struct{})
+
+	// parse url and send its posts to the chan
+	parse := func(url string, chats []int64) {
 		source, err := parser.Parse(url)
 		if err != nil {
 			log.Printf("couldn't parse %v link: %v", url, err)
 		}
 
-		posts := []model.Post{}
 		for _, item := range source.Items {
-			if item.PublishedParsed.Before(lastUpdateTime) {
-				break
+			if item.PublishedParsed == nil || item.PublishedParsed.Before(lastUpdateTime) {
+				continue
 			}
 
-			for _, chatID := range URLChat[url] {
+			for _, chatID := range chats {
 				post := model.Post{
 					Title:  item.Title,
 					URL:    item.Link,
 					ChatID: chatID,
 				}
-				posts = append(posts, post)
+				posts <- post
 			}
 		}
-		// TODO delegate messaging to a worker in a goroutine
-		for i := len(posts) - 1; i >= 0; i-- {
-			post := posts[i]
+
+		done <- struct{}{}
+	}
+
+	// send an incoming from the chan post to telegram
+	sendMessage := func() {
+		for post := range posts {
 			text := fmt.Sprintf("%v\n\n%v", post.Title, post.URL)
-			msg := tgbotapi.NewMessage(post.ChatID, text)
+			msg := builder.NewMessage(post.ChatID, text, nil)
 			_, err := bot.Send(msg)
 			if err != nil {
 				log.Printf("couldn't send post in %v chat: %v", post.ChatID, err)
 			}
 		}
 	}
+
+	// launch 5 'send' workers
+	go func() {
+		for i := 0; i < 5; i++ {
+			go sendMessage()
+		}
+	}()
+
+	// process all urls
+	for url, chats := range URLChat {
+		go parse(url, chats)
+	}
+
+	// waiting until all posts are parsed and stacked for sending
+	for i := 0; i < len(URLChat); i++ {
+		<-done
+	}
+	close(posts)
 
 	lastUpdateTime = beginTime
 }

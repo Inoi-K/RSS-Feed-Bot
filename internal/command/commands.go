@@ -4,20 +4,15 @@ import (
 	"context"
 	"fmt"
 	"github.com/Inoi-K/RSS-Feed-Bot/configs/consts"
-	"github.com/Inoi-K/RSS-Feed-Bot/internal/database"
+	loc "github.com/Inoi-K/RSS-Feed-Bot/configs/localization"
+	"github.com/Inoi-K/RSS-Feed-Bot/internal/builder"
+	db "github.com/Inoi-K/RSS-Feed-Bot/internal/database"
 	"github.com/Inoi-K/RSS-Feed-Bot/internal/feed"
 	"github.com/Inoi-K/RSS-Feed-Bot/internal/model"
 	"github.com/Inoi-K/RSS-Feed-Bot/pkg/parser"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"strings"
 )
-
-func reply(bot *tgbotapi.BotAPI, chat *tgbotapi.Chat, text string) error {
-	msg := tgbotapi.NewMessage(chat.ID, text)
-	msg.ParseMode = consts.ParseMode
-	_, err := bot.Send(msg)
-	return err
-}
 
 // ICommand provides an interface for all commands and buttons callbacks
 type ICommand interface {
@@ -28,11 +23,8 @@ type ICommand interface {
 type Menu struct{}
 
 func (c *Menu) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
-	msg := tgbotapi.NewMessage(upd.Message.Chat.ID, consts.FirstMenu)
-	msg.ParseMode = consts.ParseMode
-	msg.ReplyMarkup = consts.FirstMenuMarkup
-	_, err := bot.Send(msg)
-	return err
+	chat := upd.FromChat()
+	return builder.ReplyKeyboard(bot, chat, consts.FirstMenu, consts.FirstMenuMarkup)
 }
 
 // Start command begins an interaction with the chat and creates the record in database
@@ -42,14 +34,19 @@ func (c *Start) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.
 	chat := upd.FromChat()
 	usr := upd.SentFrom()
 
-	db := database.GetDB()
 	err := db.AddChat(ctx, chat.ID, usr.LanguageCode)
 	if err != nil {
 		return err
 	}
 
-	defer reply(bot, chat, consts.LocText[usr.LanguageCode][consts.HelpCommand])
-	return reply(bot, chat, consts.LocText[usr.LanguageCode][consts.StartCommand])
+	ok := loc.ChangeLanguage(usr.LanguageCode)
+	// if user's language is not supported then set default language to english
+	if !ok {
+		loc.ChangeLanguage("en")
+	}
+
+	defer builder.Reply(bot, chat, loc.Message(loc.Help))
+	return builder.Reply(bot, chat, loc.Message(loc.Start))
 }
 
 // Subscribe command adds sources to database and associates it with the chat
@@ -57,12 +54,10 @@ type Subscribe struct{}
 
 func (c *Subscribe) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
 	chat := upd.FromChat()
-	usr := upd.SentFrom()
-	db := database.GetDB()
 
 	urls := strings.Split(args, consts.ArgumentsSeparator)
 	for _, url := range urls {
-		ans := fmt.Sprintf(consts.LocText[usr.LanguageCode][consts.SubscribeCommandFail], consts.LocText[usr.LanguageCode][consts.NotValidLink])
+		ans := fmt.Sprintf(loc.Message(loc.SubFail), loc.Message(loc.NotValidLink))
 
 		// SERVICE VALIDATION
 		//res, err := client.Validate(url)
@@ -86,12 +81,12 @@ func (c *Subscribe) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbot
 		//	}
 		//	continue
 		//}
-		//ans = fmt.Sprintf(consts.LocText[usr.LanguageCode][consts.SubscribeCommand], res.Title, url)
+		//ans = fmt.Sprintf(loc.Message(consts.SubscribeCommand], res.Title, url)
 
 		// LIB VALIDATION
 		source, err := parser.Parse(url)
 		if err != nil {
-			err = reply(bot, chat, ans)
+			err = builder.Reply(bot, chat, ans)
 			if err != nil {
 				return err
 			}
@@ -100,15 +95,15 @@ func (c *Subscribe) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbot
 
 		err = db.AddSource(ctx, chat.ID, source.Title, url)
 		if err != nil {
-			err = reply(bot, chat, ans)
+			err = builder.Reply(bot, chat, ans)
 			if err != nil {
 				return err
 			}
 			continue
 		}
-		ans = fmt.Sprintf(consts.LocText[usr.LanguageCode][consts.SubscribeCommand], source.Title, url)
+		ans = fmt.Sprintf(loc.Message(loc.Sub), source.Title, url)
 
-		err = reply(bot, chat, ans)
+		err = builder.Reply(bot, chat, ans)
 		if err != nil {
 			return err
 		}
@@ -123,8 +118,6 @@ type Unsubscribe struct{}
 
 func (c *Unsubscribe) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
 	chat := upd.FromChat()
-	usr := upd.SentFrom()
-	db := database.GetDB()
 
 	// Remove urls if args are specified
 	// Otherwise display inline buttons with sources
@@ -135,11 +128,11 @@ func (c *Unsubscribe) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgb
 			if err != nil {
 				return err
 			}
-			ans := fmt.Sprintf(consts.LocText[usr.LanguageCode][consts.UnsubscribeCommandSuccess], url)
-			err = reply(bot, chat, ans)
+			ans := fmt.Sprintf(loc.Message(loc.UnsubSuccess), url)
+			err = builder.Reply(bot, chat, ans)
 		}
 	} else {
-		infoText := consts.LocText[usr.LanguageCode][consts.UnsubscribeCommand]
+		infoText := loc.Message(loc.Unsub)
 		err := replyInlineChatSourceKeyboard(ctx, bot, upd, nil, infoText, consts.UnsubscribeButton)
 		if err != nil {
 			return err
@@ -167,8 +160,6 @@ func (c *Deactivate) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbo
 // or replies with menu with inline buttons as corresponding sources
 func setIsActive(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string, isActive bool) error {
 	chat := upd.FromChat()
-	usr := upd.SentFrom()
-	db := database.GetDB()
 
 	// Alter sources if args are specified
 	// Otherwise display inline buttons with sources
@@ -182,10 +173,10 @@ func setIsActive(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update,
 		}
 	} else {
 		state := consts.ActivateButton
-		infoText := fmt.Sprintf(consts.LocText[usr.LanguageCode][consts.ActivateCommand])
+		infoText := loc.Message(loc.Activate)
 		if !isActive {
 			state = consts.DeactivateButton
-			infoText = fmt.Sprintf(consts.LocText[usr.LanguageCode][consts.DeactivateCommand])
+			infoText = loc.Message(loc.Deactivate)
 		}
 
 		err := replyInlineChatSourceKeyboard(ctx, bot, upd, &model.ChatSource{IsActive: !isActive}, infoText, state)
@@ -201,31 +192,13 @@ func setIsActive(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update,
 // and replies with inline buttons with commandButton as their beginning of the data
 func replyInlineChatSourceKeyboard(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, cs *model.ChatSource, infoText string, commandButton string) error {
 	chat := upd.FromChat()
-	db := database.GetDB()
-
-	msg := tgbotapi.NewMessage(upd.Message.Chat.ID, infoText)
-	msg.ParseMode = consts.ParseMode
 
 	sourcesTitleURL, err := db.GetChatSourceTitleID(ctx, chat.ID, cs)
 	if err != nil {
 		return err
 	}
 
-	var keyboard [][]tgbotapi.InlineKeyboardButton
-	for _, sourceTitleURL := range sourcesTitleURL {
-		row := tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData(sourceTitleURL[0], strings.Join([]string{commandButton, sourceTitleURL[1]}, consts.ArgumentsSeparator)),
-		)
-		keyboard = append(keyboard, row)
-	}
-	msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(keyboard...)
-
-	_, err = bot.Send(msg)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return builder.ReplyKeyboard(bot, chat, infoText, builder.MakeInlineKeyboard(sourcesTitleURL, commandButton))
 }
 
 // Ticker command starts a ticker
@@ -234,7 +207,7 @@ type Ticker struct{}
 func (c *Ticker) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
 	feed.Begin(ctx, bot)
 
-	return reply(bot, upd.FromChat(), "Ticker started")
+	return builder.Reply(bot, upd.FromChat(), "Ticker started")
 }
 
 // StopTicker command stops the ticker started in Ticker command
@@ -243,7 +216,7 @@ type StopTicker struct{}
 func (c *StopTicker) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
 	feed.End()
 
-	return reply(bot, upd.FromChat(), "Ticker stopped")
+	return builder.Reply(bot, upd.FromChat(), "Ticker stopped")
 }
 
 // Update command gets recent posts
@@ -251,19 +224,10 @@ type Update struct{}
 
 func (c *Update) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
 	chat := upd.FromChat()
-	usr := upd.SentFrom()
 
-	text := consts.LocText[usr.LanguageCode][consts.UpdateCommand]
-	msg := tgbotapi.NewMessage(chat.ID, text)
-	msg.ReplyMarkup = consts.UpdateKeyboard
-	_, err := bot.Send(msg)
-	if err != nil {
-		return err
-	}
+	go feed.ProcessNewPosts(ctx, bot)
 
-	feed.ProcessNewPosts(ctx, bot)
-
-	return nil
+	return builder.ReplyKeyboard(bot, chat, loc.Message(loc.Upd), consts.UpdateKeyboard)
 }
 
 // List command shows all current subscriptions of the chat
@@ -271,20 +235,18 @@ type List struct{}
 
 func (c *List) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
 	chat := upd.FromChat()
-	usr := upd.SentFrom()
-	db := database.GetDB()
 
 	sourcesTitleURL, err := db.GetChatSourceTitleID(ctx, chat.ID, nil)
 	if err != nil {
 		return err
 	}
 
-	text := consts.LocText[usr.LanguageCode][consts.ListCommand]
+	text := loc.Message(loc.List)
 	for _, sourceTitleURL := range sourcesTitleURL {
-		text += fmt.Sprintf("\n[%v](%v)", sourceTitleURL[0], sourceTitleURL[1])
+		text += fmt.Sprintf("\n[%v](%v)", sourceTitleURL.Text, sourceTitleURL.Data)
 	}
 
-	return reply(bot, chat, text)
+	return builder.Reply(bot, chat, text)
 }
 
 // Help command shows information about all commands
@@ -292,7 +254,21 @@ type Help struct{}
 
 func (c *Help) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
 	chat := upd.FromChat()
-	usr := upd.SentFrom()
 
-	return reply(bot, chat, consts.LocText[usr.LanguageCode][consts.HelpCommand])
+	return builder.Reply(bot, chat, loc.Message(loc.Help))
+}
+
+type Language struct{}
+
+func (c *Language) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
+	chat := upd.FromChat()
+
+	return builder.ReplyKeyboard(bot, chat, loc.Message(loc.Lang), builder.MakeInlineKeyboard(loc.SupportedLanguages, consts.LanguageButton))
+}
+
+type Ping struct{}
+
+func (c *Ping) Execute(ctx context.Context, bot *tgbotapi.BotAPI, upd tgbotapi.Update, args string) error {
+	chat := upd.FromChat()
+	return builder.Reply(bot, chat, loc.Message(loc.Pong))
 }

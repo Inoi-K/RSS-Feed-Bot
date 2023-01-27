@@ -22,7 +22,6 @@ func main() {
 	// Connect to the bot
 	bot, err = tgbotapi.NewBotAPI(*flags.Token)
 	if err != nil {
-		// Abort if something is wrong
 		log.Panic(err)
 	}
 	// Set this to true to log all interactions with telegram servers
@@ -37,6 +36,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("couldn't connect to DB: %v", err)
 	}
+	err = database.SetUp(ctx)
+	if err != nil {
+		log.Fatalf("couldn't create tables in an empty database %v", err)
+	}
 
 	// Generate structs for commands
 	commands = makeCommands()
@@ -44,10 +47,8 @@ func main() {
 	// Set update rate
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
-
 	// `updates` is a golang channel which receives telegram updates
 	updates := bot.GetUpdatesChan(u)
-
 	// Pass cancellable context to goroutine
 	go receiveUpdates(ctx, updates)
 
@@ -88,5 +89,10 @@ func makeCommands() map[string]command.ICommand {
 
 		consts.ListCommand: &command.List{},
 		consts.HelpCommand: &command.Help{},
+
+		consts.LanguageCommand: &command.Language{},
+		consts.LanguageButton:  &command.LanguageButton{},
+
+		consts.PingCommand: &command.Ping{},
 	}
 }

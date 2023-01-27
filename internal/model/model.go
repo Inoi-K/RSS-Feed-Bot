@@ -13,3 +13,9 @@ type Post struct {
 type ChatSource struct {
 	IsActive bool
 }
+
+// Content represents the content of an inline button
+type Content struct {
+	Text string
+	Data string
+}

@@ -1,0 +1,17 @@
+{
+  "start": "Hi! \nI can read RSS feeds and send you updates from your favorite sources! If you need help, then write /help :)",
+  "help": "/sub <RSS resource link> - add a link to the RSS resource of interest\n/unsub <RSS resource link> - unsubscribe from updates\n/upd - display the latest news updates\n/act <RSS resource link> - enable receiving updates from the resource\n/deact <link to RSS resource> - disable receiving updates from the resource, but leave it in the list of subscriptions\n/list - view your current subscriptions\n/help - view information about all commands",
+  "list": "*Subscription list*",
+  "upd": "Updates:",
+  "activate": "Please choose a subscription you'd like to activate:",
+  "deactivate": "Please choose a subscription you'd like to deactivate:",
+  "unsub": "Please choose a subscription you'd like to unsubscribe from:",
+  "unsubSuccess": "*Successfully unsubscribed*\n[source](%v)",
+  "sub": "*Successfully subscribed*\n[%v](%v)",
+  "subFail": "*Failed to subscribe*\n%v",
+  "notValidLink": "The link is not valid",
+  "lang": "Available languages:",
+  "langSuccess": "The language successfully changed!",
+  "langFail": "The chosen language is not supported yet",
+  "pong": "pong!"
+}

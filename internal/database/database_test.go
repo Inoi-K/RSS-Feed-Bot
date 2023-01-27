@@ -25,11 +25,10 @@ func TestAddChat(t *testing.T) {
 
 	ctx := context.Background()
 	ConnectDB(ctx)
-	db := GetDB()
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			got := db.AddChat(ctx, test.chatID, test.lang)
+			got := AddChat(ctx, test.chatID, test.lang)
 			if got != test.want {
 				t.Errorf("got %v, want %v", got, test.want)
 			}
@@ -51,11 +50,10 @@ func TestAddSource(t *testing.T) {
 
 	ctx := context.Background()
 	ConnectDB(ctx)
-	db := GetDB()
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			got := db.AddSource(ctx, test.chatID, test.name, test.url)
+			got := AddSource(ctx, test.chatID, test.name, test.url)
 			if got != test.want {
 				t.Errorf("got %v, want %v", got, test.want)
 			}
@@ -76,11 +74,10 @@ func TestRemoveSource(t *testing.T) {
 
 	ctx := context.Background()
 	ConnectDB(ctx)
-	db := GetDB()
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			got := db.AddSource(ctx, test.chatID, test.name, test.url)
+			got := AddSource(ctx, test.chatID, test.name, test.url)
 			if got != test.want {
 				t.Errorf("got %v, want %v", got, test.want)
 			}
@@ -100,11 +97,10 @@ func TestGetChatSourcesTitleURL(t *testing.T) {
 
 	ctx := context.Background()
 	ConnectDB(ctx)
-	db := GetDB()
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			_, got := db.GetChatSourceTitleID(ctx, test.chatID, nil)
+			_, got := GetChatSourceTitleID(ctx, test.chatID, nil)
 			if got != test.want {
 				t.Errorf("got %v, want %v", got, test.want)
 			}
@@ -125,11 +121,10 @@ func TestGetChatSourcesTitleURL(t *testing.T) {
 //
 //	ctx := context.Background()
 //	ConnectDB(ctx)
-//	db := GetDB()
 //
 //	for _, test := range tests {
 //		t.Run(test.name, func(t *testing.T) {
-//			_, got := db.GetNewPosts(ctx, test.lastPostID)
+//			_, got := GetNewPosts(ctx, test.lastPostID)
 //			if got != test.want {
 //				t.Errorf("got %v, want %v", got, test.want)
 //			}
