@@ -36,6 +36,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("couldn't connect to DB: %v", err)
 	}
+	err = database.SetUp(ctx)
+	if err != nil {
+		log.Fatalf("couldn't create tables in an empty database %v", err)
+	}
 
 	// Generate structs for commands
 	commands = makeCommands()
